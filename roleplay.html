@@ -819,6 +819,12 @@
         .phone-call-overlay .round-call-btn { width:58px; height:58px; border:0; border-radius:50%; color:#fff; font-size:1.2rem; cursor:pointer; }
         .call-accept { background:#16a34a; }
         .call-decline { background:#dc2626; }
+        .call-mute { background:#475569; }
+        .call-mute.is-muted { background:#d97706; }
+        .phone-call-overlay .call-overlay-actions { gap:18px; flex-wrap:wrap; justify-content:center; }
+        .call-control-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; min-width:62px; }
+        .call-control-label { color:#e2e8f0; font-size:.68rem; }
+        .phone-call-overlay .round-call-btn:disabled { opacity:.45; cursor:not-allowed; }
         .call-setup-hint { padding:9px 10px; border-radius:10px; background:rgba(234,179,8,.12); color:#fbbf24; font-size:.68rem; line-height:1.4; margin-bottom:10px; }
 
     </style>
@@ -1313,7 +1319,14 @@
                         <button class="round-call-btn call-accept" onclick="phoneAnswerCall()" aria-label="Répondre à l’appel"><i class="fa-solid fa-phone"></i></button>
                     </div>
                     <div class="call-overlay-actions" id="phone-active-actions" style="display:none;">
-                        <button class="round-call-btn call-decline" onclick="phoneHangup()" aria-label="Raccrocher"><i class="fa-solid fa-phone-slash"></i></button>
+                        <div class="call-control-wrap">
+                            <button id="phone-mute-button" class="round-call-btn call-mute" onclick="phoneToggleMute()" aria-label="Couper le microphone" title="Couper le microphone" disabled><i class="fa-solid fa-microphone"></i></button>
+                            <span id="phone-mute-label" class="call-control-label">Muet : non</span>
+                        </div>
+                        <div class="call-control-wrap">
+                            <button class="round-call-btn call-decline" onclick="phoneHangup()" aria-label="Raccrocher" title="Raccrocher"><i class="fa-solid fa-phone-slash"></i></button>
+                            <span class="call-control-label">Raccrocher</span>
+                        </div>
                     </div>
                 </div>
                 <audio id="phone-remote-audio" autoplay playsinline></audio>
@@ -1597,6 +1610,7 @@
         const PHONE_ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
         let phoneSocket = null;
         let phoneLocalStream = null;
+        let phoneIsMuted = false;
         let phonePeerConnection = null;
         let phoneRemoteNumber = '';
         let phonePendingOffer = null;
@@ -1768,6 +1782,8 @@
             phoneShowCallOverlay(phoneFindContactName(target) || target, target, 'Appel en cours…', false);
             try {
                 phoneLocalStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                phoneIsMuted = false;
+                phoneUpdateMuteButton();
                 const pc = phoneMakePeerConnection();
                 phoneLocalStream.getTracks().forEach(track => pc.addTrack(track, phoneLocalStream));
                 const offer = await pc.createOffer();
@@ -1789,6 +1805,8 @@
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showNotification('Le micro nécessite HTTPS ou localhost.'); return; }
             try {
                 phoneLocalStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                phoneIsMuted = false;
+                phoneUpdateMuteButton();
                 const pc = phoneMakePeerConnection();
                 phoneLocalStream.getTracks().forEach(track => pc.addTrack(track, phoneLocalStream));
                 await pc.setRemoteDescription(new RTCSessionDescription(phonePendingOffer));
@@ -1826,6 +1844,45 @@
             }
         }
 
+        function phoneToggleMute() {
+            if (!phoneLocalStream) {
+                showNotification('Le microphone n’est pas encore prêt.');
+                return;
+            }
+
+            const audioTracks = phoneLocalStream.getAudioTracks();
+            if (!audioTracks.length) {
+                showNotification('Aucune piste microphone disponible.');
+                return;
+            }
+
+            phoneIsMuted = !phoneIsMuted;
+            audioTracks.forEach(track => {
+                track.enabled = !phoneIsMuted;
+            });
+            phoneUpdateMuteButton();
+
+            showNotification(phoneIsMuted
+                ? 'Microphone coupé.'
+                : 'Microphone réactivé.');
+        }
+
+        function phoneUpdateMuteButton() {
+            const button = document.getElementById('phone-mute-button');
+            const label = document.getElementById('phone-mute-label');
+            if (!button || !label) return;
+
+            const hasAudioTrack = !!phoneLocalStream && phoneLocalStream.getAudioTracks().length > 0;
+            button.disabled = !hasAudioTrack;
+            button.classList.toggle('is-muted', phoneIsMuted);
+            button.innerHTML = phoneIsMuted
+                ? '<i class="fa-solid fa-microphone-slash"></i>'
+                : '<i class="fa-solid fa-microphone"></i>';
+            button.setAttribute('aria-label', phoneIsMuted ? 'Réactiver le microphone' : 'Couper le microphone');
+            button.title = phoneIsMuted ? 'Réactiver le microphone' : 'Couper le microphone';
+            label.textContent = phoneIsMuted ? 'Muet : oui' : 'Muet : non';
+        }
+
         function phoneRejectCall() {
             if (phoneCallState === 'incoming' && phoneRemoteNumber) {
                 phoneSend({ type: 'call-reject', target: phoneRemoteNumber, reason: 'rejected' });
@@ -1856,6 +1913,8 @@
                 phoneLocalStream.getTracks().forEach(track => track.stop());
                 phoneLocalStream = null;
             }
+            phoneIsMuted = false;
+            phoneUpdateMuteButton();
             const audio = document.getElementById('phone-remote-audio');
             if (audio) { audio.pause(); audio.srcObject = null; }
             phoneRemoteNumber = '';
@@ -1881,6 +1940,7 @@
             document.getElementById('phone-active-actions').style.display = incoming ? 'none' : 'flex';
             document.getElementById('phone-hangup-button').disabled = false;
             document.getElementById('phone-call-button').disabled = true;
+            phoneUpdateMuteButton();
             overlay.classList.add('visible');
         }
 

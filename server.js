@@ -1,51 +1,55 @@
 
 /**
- * Blainville RP QC
- * Site web + API Discord + signalisation du téléphone
- *
- * Installation :
- * npm install express cors discord.js dotenv ws
- *
- * Démarrage :
- * node server.js
+ * Blainville RP QC — serveur du site, API Discord et téléphone audio.
+ * Node.js 18+
+ * Démarrage Canner : npm start
+ * Variables : DISCORD_TOKEN, GUILD_ID et PORT (fourni par l'hébergeur).
  */
 
 'use strict';
 
 require('dotenv').config();
 
-const { Client, GatewayIntentBits } = require('discord.js');
-const express = require('express');
-const cors = require('cors');
 const path = require('path');
 const http = require('http');
+const express = require('express');
+const cors = require('cors');
 const WebSocket = require('ws');
+const { Client, GatewayIntentBits } = require('discord.js');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json({ limit: '32kb' }));
-app.use(express.static(path.join(__dirname)));
 
+// Servir les fichiers du site.
+app.use(express.static(__dirname));
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'roleplay.html'));
+});
+
+// HTTP et WebSocket partagent le même serveur.
 const server = http.createServer(app);
-
 const wss = new WebSocket.Server({
     server,
     maxPayload: 1024 * 1024
 });
 
-const client = new Client({
+// Bot Discord.
+const discord = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMembers
     ]
 });
 
+// Numéro RP -> connexion WebSocket active.
 const clientsByNumber = new Map();
 
-function send(socket, message) {
+function send(socket, payload) {
     if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify(message));
+        socket.send(JSON.stringify(payload));
     }
 }
 
@@ -67,51 +71,53 @@ function safeName(value) {
     return name || 'Joueur RP';
 }
 
-// ================================================
-// API DISCORD : nombre de membres humains
-// ================================================
+// Vérifier que le serveur est en ligne.
+app.get('/health', (req, res) => {
+    res.json({
+        ok: true,
+        service: 'Blainville RP QC'
+    });
+});
 
+// API Discord : nombre de membres humains.
 app.get('/api/members', async (req, res) => {
     try {
         if (!process.env.GUILD_ID) {
             return res.status(500).json({
-                error: 'GUILD_ID manquant dans le fichier .env'
+                error: 'GUILD_ID manquant dans les variables d’environnement.'
             });
         }
 
-        const guild = client.guilds.cache.get(
+        const guild = discord.guilds.cache.get(
             process.env.GUILD_ID
         );
 
         if (!guild) {
             return res.status(404).json({
-                error: 'Serveur Discord introuvable'
+                error: 'Serveur Discord introuvable.'
             });
         }
 
         await guild.members.fetch();
 
-        const humanCount = guild.members.cache
+        const count = guild.members.cache
             .filter(member => !member.user.bot)
             .size;
 
-        return res.json({
-            count: humanCount
-        });
+        return res.json({ count });
 
     } catch (error) {
         console.error('Erreur Discord API :', error);
 
         return res.status(500).json({
-            error: 'Erreur récupération membres'
+            error: 'Erreur récupération membres.'
         });
     }
 });
 
-// ================================================
-// TÉLÉPHONE : signalisation des appels WebRTC
-// ================================================
-
+// Téléphone : signalisation des appels audio WebRTC.
+// Le serveur relaie les offres, réponses et candidats ICE.
+// Le son circule généralement directement entre les navigateurs.
 wss.on('connection', socket => {
     socket.phoneNumber = null;
     socket.phoneName = 'Joueur RP';
@@ -137,7 +143,7 @@ wss.on('connection', socket => {
             return;
         }
 
-        // Enregistrer le téléphone du joueur
+        // Enregistrer le téléphone.
         if (message.type === 'register') {
             if (!validPhoneNumber(message.number)) {
                 send(socket, {
@@ -149,9 +155,9 @@ wss.on('connection', socket => {
                 return;
             }
 
-            // Une connexion active par numéro
             const previous = clientsByNumber.get(message.number);
 
+            // Fermer une éventuelle ancienne connexion.
             if (previous && previous !== socket) {
                 send(previous, {
                     type: 'server-error',
@@ -182,7 +188,7 @@ wss.on('connection', socket => {
             return;
         }
 
-        // Vérifier que le joueur est enregistré
+        // Le téléphone doit être enregistré.
         if (
             !socket.phoneNumber ||
             clientsByNumber.get(socket.phoneNumber) !== socket
@@ -191,11 +197,10 @@ wss.on('connection', socket => {
                 type: 'server-error',
                 message: 'Enregistre ton numéro avant d’appeler.'
             });
-
             return;
         }
 
-        const allowedMessages = new Set([
+        const allowedTypes = new Set([
             'call-offer',
             'call-answer',
             'call-candidate',
@@ -203,12 +208,11 @@ wss.on('connection', socket => {
             'call-end'
         ]);
 
-        if (!allowedMessages.has(message.type)) {
+        if (!allowedTypes.has(message.type)) {
             send(socket, {
                 type: 'server-error',
                 message: 'Type de message non autorisé.'
             });
-
             return;
         }
 
@@ -225,7 +229,6 @@ wss.on('connection', socket => {
                 message: 'Numéro de destination invalide.',
                 target
             });
-
             return;
         }
 
@@ -242,11 +245,10 @@ wss.on('connection', socket => {
                     target
                 });
             }
-
             return;
         }
 
-        // Relayer les informations de signalisation WebRTC
+        // Transmettre uniquement les données de signalisation utiles.
         const forwarded = {
             type: message.type,
             from: socket.phoneNumber,
@@ -275,6 +277,7 @@ wss.on('connection', socket => {
     });
 
     socket.on('close', () => {
+        // Ne pas supprimer une nouvelle connexion portant le même numéro.
         if (
             socket.phoneNumber &&
             clientsByNumber.get(socket.phoneNumber) === socket
@@ -295,57 +298,57 @@ wss.on('connection', socket => {
     });
 });
 
-// ================================================
-// CONNEXION DU BOT DISCORD
-// ================================================
-
-client.once('ready', () => {
-    console.log(
-        `Bot Discord connecté : ${client.user.tag}`
-    );
+// Événements Discord.
+discord.once('ready', () => {
+    console.log(`Bot Discord connecté : ${discord.user.tag}`);
 });
 
-client.on('error', error => {
-    console.error('Erreur du bot Discord :', error);
+discord.on('error', error => {
+    console.error('Erreur Discord :', error);
 });
 
-// ================================================
-// DÉMARRAGE
-// ================================================
-
+// Démarrage sur le port fourni par Canner.
 const PORT = Number(process.env.PORT || 3000);
 
 server.listen(PORT, () => {
-    console.log(
-        `Serveur Blainville RP QC démarré sur le port ${PORT}`
-    );
-
-    console.log(`Site web : http://localhost:${PORT}`);
-    console.log(`Téléphone : ws://localhost:${PORT}`);
+    console.log(`Blainville RP QC écoute sur le port ${PORT}`);
+    console.log('API membres : /api/members');
+    console.log('Vérification serveur : /health');
 });
 
+// Connexion du bot.
 if (!process.env.DISCORD_TOKEN) {
     console.error(
-        'DISCORD_TOKEN manquant dans le fichier .env'
+        'DISCORD_TOKEN manquant dans les variables d’environnement.'
     );
 } else {
-    client.login(process.env.DISCORD_TOKEN).catch(error => {
+    discord.login(process.env.DISCORD_TOKEN).catch(error => {
         console.error(
-            'Connexion Discord impossible :',
+            'Connexion du bot Discord impossible :',
             error
         );
     });
 }
 
+// Arrêt propre du serveur.
+let shuttingDown = false;
+
 function shutdown() {
+    if (shuttingDown) return;
+    shuttingDown = true;
+
     console.log('Arrêt du serveur...');
 
     for (const socket of wss.clients) {
         socket.close(1001, 'Serveur arrêté');
     }
 
+    wss.close();
+    discord.destroy();
+
     server.close(() => process.exit(0));
-    client.destroy();
+
+    setTimeout(() => process.exit(0), 5000).unref();
 }
 
 process.on('SIGINT', shutdown);

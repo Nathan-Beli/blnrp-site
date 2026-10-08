@@ -613,60 +613,7 @@
         }
 
 
-        /* ===== MODERNISATION VISUELLE — sans modifier les fonctions ===== */
-        :root {
-            --bg-dark: #080b14;
-            --card-bg: rgba(17, 24, 39, 0.88);
-            --primary: #f04452;
-            --primary-hover: #ff5967;
-            --text-main: #f8fafc;
-            --text-muted: #a5afc2;
-            --border-color: rgba(240, 68, 82, 0.28);
-            --phone-card-border: rgba(255,255,255,.09);
-        }
-
-        html { scroll-behavior: smooth; }
-        body {
-            background-color: #080b14;
-            background-image:
-                radial-gradient(ellipse at 15% 5%, rgba(240,68,82,.17), transparent 36%),
-                radial-gradient(ellipse at 90% 35%, rgba(70,83,150,.16), transparent 34%),
-                linear-gradient(135deg, rgba(7,10,18,.94), rgba(13,18,32,.97)),
-                url('fond.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }
-
-        .navbar {
-            padding: .9rem clamp(1rem, 4vw, 4rem);
-            background: rgba(8,11,20,.82);
-            border-bottom: 1px solid rgba(255,255,255,.09);
-            box-shadow: 0 10px 35px rgba(0,0,0,.2);
-            backdrop-filter: blur(22px) saturate(150%);
-        }
-        .site-logo { filter: drop-shadow(0 0 12px rgba(240,68,82,.22)); }
-        .logo-text { letter-spacing: -.35px; }
-        .logo-tag { text-shadow: 0 0 22px rgba(240,68,82,.3); }
-        .nav-links a { transition: color .2s ease, opacity .2s ease; }
-        .nav-links a:hover, .nav-links a.active { color: #ff6974; }
-        .btn-discord {
-            border-radius: 12px;
-            padding: .72rem 1.1rem;
-            box-shadow: 0 8px 22px rgba(88,101,242,.22);
-            transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
-        }
-        .btn-discord:hover { transform: translateY(-2px); filter: brightness(1.08); box-shadow: 0 12px 26px rgba(88,101,242,.3); }
-
-        .page-container { max-width: 1200px; margin-top: 7rem; padding-bottom: 2rem; }
-        .page-header { margin-bottom: 2rem; }
-        .page-header h1 {
-            font-size: clamp(2rem, 4vw, 3rem);
-            letter-spacing: -1.4px;
-            line-height: 1.12;
-            text-shadow: 0 8px 35px rgba(0,0,0,.3);
-        }
-        .page-header h1 span { text-shadow: 0 0 35px rgba(240,68,82,.25); }
+        /* ===== MODERNISATION DU TÉLÉPHONE UNIQUEMENT ===== */
 
         .phone-wrapper {
             background: linear-gradient(145deg, #303545, #07090e 35%, #222735 75%, #090b10);
@@ -775,24 +722,66 @@
             box-shadow: 0 -15px 45px rgba(0,0,0,.22);
         }
         .modal-item { border-radius: 13px; padding: 12px; border-color: rgba(255,255,255,.08); }
-        footer { background: rgba(5,7,13,.75); border-top-color: rgba(255,255,255,.08); }
-
-        button, a, input, .app-icon, .settings-item, .wallpaper-card { -webkit-tap-highlight-color: transparent; }
-        button:focus-visible, a:focus-visible, .app-icon:focus-visible, .settings-item:focus-visible, .wallpaper-card:focus-visible {
-            outline: 2px solid #ff6974; outline-offset: 3px;
+        .phone-screen button, .phone-screen input, .phone-screen .app-icon, .phone-screen .settings-item, .phone-screen .wallpaper-card {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .phone-screen button:focus-visible, .phone-screen input:focus-visible, .phone-screen .app-icon:focus-visible, .phone-screen .settings-item:focus-visible, .phone-screen .wallpaper-card:focus-visible {
+            outline: 2px solid #ff6974;
+            outline-offset: 3px;
         }
         @media (max-width: 520px) {
-            .navbar { padding: .75rem 1rem; }
-            .logo-text { font-size: 1.05rem; }
-            .site-logo { height: 35px; }
-            .nav-links a { margin: 0 .35rem; font-size: .82rem; }
-            .btn-discord { padding: .55rem .7rem; font-size: .82rem; }
-            .page-container { margin-top: 6.5rem; padding: 0 .75rem 1.5rem; }
-            .page-header { margin-bottom: 1.2rem; }
             .phone-wrapper { width: min(360px, calc(100vw - 24px)); height: min(720px, calc(100dvh - 125px)); min-height: 600px; border-radius: 43px; }
         }
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+
+
+        /* Finition moderne appliquée uniquement au téléphone */
+        .phone-wrapper {
+            background: linear-gradient(145deg, #3a4050 0%, #090b11 35%, #252a37 72%, #080a0f 100%);
+            border: 1px solid rgba(255,255,255,.3);
+            border-radius: 50px;
+            padding: 10px;
+            box-shadow: 0 35px 90px rgba(0,0,0,.62), 0 0 0 1px rgba(255,255,255,.04), 0 0 38px rgba(240,68,82,.1);
+            isolation: isolate;
+        }
+        .phone-screen {
+            border-radius: 40px;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+        }
+        .phone-notch { width: 104px; height: 25px; top: 7px; border-radius: 0 0 17px 17px; }
+        .status-bar { padding: 0 21px; letter-spacing: .1px; }
+        .app-view { padding: 8px 15px 82px; scrollbar-color: rgba(255,255,255,.24) transparent; }
+        .app-header { font-size: 1.48rem; letter-spacing: -.65px; margin-bottom: 16px; }
+        .btn-back { color: #7da8ff; transition: opacity .2s ease; }
+        .btn-back:hover { opacity: .75; }
+        .settings-group {
+            border-radius: 17px;
+            border-color: var(--phone-card-border);
+            box-shadow: 0 7px 20px rgba(0,0,0,.08);
+            margin-bottom: 15px;
+        }
+        .settings-item { padding: 13px 14px; font-size: .86rem; transition: background .18s ease; }
+        .settings-item:hover { background: rgba(255,255,255,.035); }
+        .settings-icon { width: 31px; height: 31px; border-radius: 10px; box-shadow: 0 3px 9px rgba(0,0,0,.13); }
+        .switch { transform: scale(.96); transform-origin: right center; }
+        .slider { background-color: #3d4658; }
+        .wallpaper-grid { gap: 11px; }
+        .wallpaper-card { border-radius: 15px; overflow: hidden; box-shadow: 0 6px 15px rgba(0,0,0,.22); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+        .wallpaper-card:hover { transform: translateY(-3px); box-shadow: 0 12px 22px rgba(0,0,0,.28); }
+        .wallpaper-card.selected { border-color: #f04452; box-shadow: 0 0 0 2px rgba(240,68,82,.18), 0 8px 20px rgba(0,0,0,.25); }
+        .wallpaper-card.selected::after { background: #f04452; width: 21px; height: 21px; }
+        .home-grid { gap: 18px 13px; margin-top: 20px; }
+        .app-icon { transition: transform .18s ease; }
+        .app-icon:hover { transform: translateY(-3px); }
+        .icon-box { width: 55px; height: 55px; border-radius: 17px; box-shadow: 0 7px 15px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.18); transition: box-shadow .2s ease, filter .2s ease; }
+        .app-icon:hover .icon-box { filter: brightness(1.1); box-shadow: 0 10px 20px rgba(0,0,0,.3); }
+        .app-label { font-size: .68rem; letter-spacing: .05px; text-shadow: 0 1px 5px rgba(0,0,0,.25); }
+        .phone-dock { bottom: 13px; left: 13px; right: 13px; height: 64px; }
+        .bank-actions { gap: 10px; }
+        .bank-action-btn { border-radius: 14px; transition: transform .18s ease, filter .18s ease; }
+        .bank-action-btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+        @media (max-width: 420px) {
+            .phone-wrapper { width: min(360px, calc(100vw - 24px)); height: min(720px, calc(100dvh - 30px)); padding: 8px; border-radius: 44px; }
+            .phone-screen { border-radius: 36px; }
         }
 
     </style>
@@ -1000,7 +989,6 @@
 
                     <label style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">IDENTITÉ</label>
                     <input type="text" id="account-name-input" class="phone-input" value="Nathan">
-                    <input type="email" id="account-email-input" class="phone-input" placeholder="Email RP">
 
                     <button class="phone-btn" onclick="saveAccountDetails()">Enregistrer</button>
                 </div>
@@ -1183,10 +1171,6 @@
                             <span>Compte bancaire</span>
                             <strong id="bank-balance" style="color:#22c55e;">0 $</strong>
                         </div>
-                        <div class="settings-item">
-                            <span>Argent liquide</span>
-                            <strong id="cash-balance" style="color:var(--text-muted);">0 $</strong>
-                        </div>
                     </div>
                 </div>
 
@@ -1264,15 +1248,11 @@
         let lockEnabled = localStorage.getItem('phone_lockEnabled') !== 'false';
         let currentPin = localStorage.getItem('phone_pin') || '1234';
 
-        // Soldes RP : le compte et l'argent liquide commencent à 0 $.
+        // Le solde bancaire RP commence à 0 $.
         if (localStorage.getItem('phone_bankBalance') === null) {
             localStorage.setItem('phone_bankBalance', '0');
         }
-        if (localStorage.getItem('phone_cashBalance') === null) {
-            localStorage.setItem('phone_cashBalance', '0');
-        }
         let bankBalance = Number(localStorage.getItem('phone_bankBalance')) || 0;
-        let cashBalance = Number(localStorage.getItem('phone_cashBalance')) || 0;
 
         let enteredPin = "";
 
@@ -1354,11 +1334,8 @@
 
         function updateBankBalances() {
             const bankElement = document.getElementById('bank-balance');
-            const cashElement = document.getElementById('cash-balance');
             if (bankElement) bankElement.innerText = formatMoney(bankBalance);
-            if (cashElement) cashElement.innerText = formatMoney(cashBalance);
             localStorage.setItem('phone_bankBalance', String(bankBalance));
-            localStorage.setItem('phone_cashBalance', String(cashBalance));
         }
 
         function claimSalary() {

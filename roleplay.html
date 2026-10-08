@@ -4,52 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blainville RP QC - Roleplay</title>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
             --bg-dark: #0f172a;
-            --card-bg: rgba(30, 41, 59, 0.85);
             --primary: #ef4444;
-            --primary-hover: #dc2626;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --discord-color: #5865F2;
-            --border-color: rgba(239, 68, 68, 0.25);
             --phone-bg: #000000;
             --phone-card: #121212;
             --phone-text: #ffffff;
-            --phone-card-border: rgba(255, 255, 255, 0.08);
-        }
-
-        .phone-screen.theme-light {
-            --phone-bg: #f2f2f7;
-            --phone-card: #ffffff;
-            --phone-text: #000000;
-            --phone-card-border: rgba(0, 0, 0, 0.08);
+            --phone-card-border: rgba(255,255,255,.08);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
         }
 
         body {
             color: var(--text-main);
-            line-height: 1.6;
             min-height: 100vh;
-            background-image: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)), url('fond.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }
-
-        a, a:visited, a:hover, a:active {
-            text-decoration: none;
+            background: linear-gradient(rgba(15,23,42,.85),rgba(15,23,42,.95)), url("fond.png") center/cover fixed;
         }
 
         .navbar {
@@ -57,65 +36,24 @@
             justify-content: space-between;
             align-items: center;
             padding: 1rem 5%;
-            background-color: rgba(15, 23, 42, 0.95);
+            background: rgba(15,23,42,.95);
             position: fixed;
             width: 100%;
             top: 0;
-            left: 0;
             z-index: 1000;
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .logo-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .site-logo {
-            height: 42px;
-            width: auto;
-            object-fit: contain;
+            border-bottom: 1px solid rgba(239,68,68,.25);
         }
 
         .logo-text {
             font-size: 1.3rem;
             font-weight: 800;
-            letter-spacing: 0.5px;
         }
 
-        .logo-bold { color: #ffffff !important; }
-        .logo-tag { color: var(--primary) !important; }
-
-        .nav-links a {
-            color: var(--text-muted);
-            margin: 0 1rem;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: color 0.3s ease;
-        }
-
-        .nav-links a:hover,
-        .nav-links a.active {
-            color: var(--primary);
-        }
-
-        .btn-discord {
-            background-color: var(--discord-color);
-            color: #ffffff !important;
-            padding: 0.6rem 1.2rem;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .logo-tag { color: var(--primary); }
 
         .page-container {
             max-width: 1100px;
-            margin: 6rem auto 3rem auto;
+            margin: 6rem auto 3rem;
             padding: 0 1.5rem;
             display: flex;
             flex-direction: column;
@@ -130,12 +68,9 @@
         .page-header h1 {
             font-size: 2.2rem;
             font-weight: 800;
-            color: #ffffff;
         }
 
-        .page-header h1 span {
-            color: var(--primary);
-        }
+        .page-header span { color: var(--primary); }
 
         .phone-wrapper {
             width: 360px;
@@ -143,8 +78,8 @@
             background: #000;
             border-radius: 46px;
             padding: 12px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(239, 68, 68, 0.25);
             border: 3px solid #334155;
+            box-shadow: 0 20px 50px #000, 0 0 25px rgba(239,68,68,.25);
             position: relative;
             user-select: none;
         }
@@ -152,14 +87,21 @@
         .phone-screen {
             width: 100%;
             height: 100%;
-            background-color: var(--phone-bg);
+            background: var(--phone-bg);
             color: var(--phone-text);
             border-radius: 36px;
             overflow: hidden;
             position: relative;
             display: flex;
             flex-direction: column;
-            transition: background-color 0.2s ease, color 0.2s ease;
+            transition: background .2s,color .2s;
+        }
+
+        .phone-screen.theme-light {
+            --phone-bg: #f2f2f7;
+            --phone-card: #fff;
+            --phone-text: #000;
+            --phone-card-border: rgba(0,0,0,.08);
         }
 
         .phone-notch {
@@ -169,7 +111,7 @@
             transform: translateX(-50%);
             width: 95px;
             height: 22px;
-            background-color: #000;
+            background: #000;
             border-radius: 20px;
             z-index: 100;
         }
@@ -180,7 +122,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 0 20px;
-            font-size: 0.75rem;
+            font-size: .75rem;
             font-weight: 700;
             z-index: 90;
             flex-shrink: 0;
@@ -190,23 +132,12 @@
             flex: 1;
             display: none;
             flex-direction: column;
-            padding: 6px 14px 75px 14px;
+            padding: 6px 14px 75px;
             overflow-y: auto;
             scrollbar-width: thin;
         }
 
-        .app-view::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .app-view::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 4px;
-        }
-
-        .app-view.active {
-            display: flex;
-        }
+        .app-view.active { display: flex; }
 
         .app-header {
             display: flex;
@@ -215,21 +146,17 @@
             font-weight: 800;
             font-size: 1.4rem;
             margin-bottom: 12px;
-            padding-top: 4px;
         }
 
         .btn-back {
             color: #3b82f6;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: .9rem;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 4px;
         }
 
         .settings-group {
-            background-color: var(--phone-card);
+            background: var(--phone-card);
             border-radius: 14px;
             overflow: hidden;
             margin-bottom: 14px;
@@ -242,14 +169,12 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.85rem;
+            font-size: .85rem;
             border-bottom: 1px solid var(--phone-card-border);
             cursor: pointer;
         }
 
-        .settings-item:last-child {
-            border-bottom: none;
-        }
+        .settings-item:last-child { border-bottom: none; }
 
         .settings-item-left {
             display: flex;
@@ -265,7 +190,6 @@
             align-items: center;
             justify-content: center;
             color: #fff;
-            font-size: 0.85rem;
         }
 
         .settings-item-right {
@@ -273,57 +197,12 @@
             align-items: center;
             gap: 6px;
             color: var(--text-muted);
-            font-size: 0.8rem;
-        }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 42px;
-            height: 24px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #334155;
-            transition: .3s;
-            border-radius: 24px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .3s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: #22c55e;
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(18px);
+            font-size: .8rem;
         }
 
         .wallpaper-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(2,1fr);
             gap: 10px;
             margin-top: 8px;
             padding-bottom: 10px;
@@ -338,12 +217,14 @@
             align-items: flex-end;
             justify-content: center;
             padding-bottom: 8px;
-            font-size: 0.75rem;
+            font-size: .75rem;
             font-weight: 600;
             color: #fff;
             position: relative;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 8px rgba(0,0,0,.3);
         }
+
+        .wallpaper-card.selected { border-color: #3b82f6; }
 
         .wallpaper-card.selected::after {
             content: "\f00c";
@@ -360,12 +241,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.6rem;
+            font-size: .6rem;
         }
 
         .home-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(4,1fr);
             gap: 14px;
             margin-top: 15px;
         }
@@ -387,13 +268,12 @@
             font-size: 1.3rem;
             color: #fff;
             margin-bottom: 4px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,.3);
         }
 
         .app-label {
-            font-size: 0.65rem;
+            font-size: .65rem;
             text-align: center;
-            font-weight: 500;
         }
 
         .phone-dock {
@@ -402,7 +282,7 @@
             left: 12px;
             right: 12px;
             height: 60px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255,255,255,.15);
             backdrop-filter: blur(15px);
             border-radius: 22px;
             display: flex;
@@ -418,7 +298,7 @@
             border: 1px solid var(--phone-card-border);
             background: var(--phone-card);
             color: var(--phone-text);
-            font-size: 0.85rem;
+            font-size: .85rem;
             margin-bottom: 10px;
             outline: none;
         }
@@ -431,8 +311,9 @@
             border: none;
             border-radius: 10px;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: .85rem;
             cursor: pointer;
+            margin-bottom: 8px;
         }
 
         .home-bar {
@@ -442,11 +323,11 @@
             transform: translateX(-50%);
             width: 100px;
             height: 4px;
-            background-color: var(--phone-text);
+            background: var(--phone-text);
             border-radius: 2px;
             cursor: pointer;
             z-index: 100;
-            opacity: 0.6;
+            opacity: .6;
         }
 
         .phone-notif {
@@ -454,11 +335,11 @@
             top: 42px;
             left: 10px;
             right: 10px;
-            background: rgba(30, 41, 59, 0.95);
+            background: rgba(30,41,59,.95);
             border: 1px solid var(--primary);
             padding: 8px 12px;
             border-radius: 10px;
-            font-size: 0.75rem;
+            font-size: .75rem;
             color: #fff;
             display: none;
             z-index: 110;
@@ -466,11 +347,8 @@
 
         .lock-screen {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15, 23, 42, 0.98);
+            inset: 0;
+            background: rgba(15,23,42,.98);
             backdrop-filter: blur(20px);
             z-index: 200;
             display: flex;
@@ -483,7 +361,7 @@
         .pin-dots {
             display: flex;
             gap: 12px;
-            margin: 20px 0 30px 0;
+            margin: 20px 0 30px;
         }
 
         .dot {
@@ -491,7 +369,6 @@
             height: 14px;
             border-radius: 50%;
             border: 2px solid #64748b;
-            transition: background 0.2s;
         }
 
         .dot.active {
@@ -501,7 +378,7 @@
 
         .pin-keypad {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3,1fr);
             gap: 15px;
             width: 220px;
         }
@@ -510,7 +387,7 @@
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255,255,255,.1);
             color: #fff;
             display: flex;
             align-items: center;
@@ -518,56 +395,15 @@
             font-size: 1.2rem;
             font-weight: 700;
             cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .key-btn:active {
-            background: rgba(255, 255, 255, 0.3);
         }
 
         .bank-card {
-            background: linear-gradient(135deg, #0284c7 0%, #0f172a 100%);
+            background: linear-gradient(135deg,#0284c7 0%,#0f172a 100%);
             border-radius: 18px;
             padding: 16px;
-            position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,.12);
+            box-shadow: 0 8px 16px rgba(0,0,0,.4);
             margin-bottom: 12px;
-        }
-
-        .bank-card-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        }
-
-        .bank-card-title {
-            font-size: 0.95rem;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-
-        .bank-card-chip {
-            width: 32px;
-            height: 22px;
-            background: linear-gradient(135deg, #eab308, #ca8a04);
-            border-radius: 4px;
-        }
-
-        .bank-card-num {
-            font-size: 1.1rem;
-            letter-spacing: 2px;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-
-        .bank-card-bottom {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.65rem;
-            color: #cbd5e1;
-            text-transform: uppercase;
         }
 
         .bank-actions {
@@ -583,1952 +419,466 @@
             color: var(--phone-text);
             padding: 8px;
             border-radius: 10px;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            font-size: .8rem;
             cursor: pointer;
         }
 
-        .bank-modal {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            z-index: 150;
-            display: none;
-            flex-direction: column;
-            justify-content: flex-end;
-        }
+        @media (max-width: 420px) {
+            .phone-wrapper {
+                width: 100%;
+                max-width: 360px;
+                height: min(720px, 85vh);
+            }
 
-        .bank-modal-content {
-            background: #1e293b;
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            padding: 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .modal-item {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        footer {
-            text-align: center;
-            padding: 1.5rem;
-            background-color: rgba(7, 10, 18, 0.9);
-            color: #64748b;
-            font-size: 0.85rem;
-            border-top: 1px solid var(--border-color);
-            margin-top: auto;
-            width: 100%;
+            .page-header h1 { font-size: 1.7rem; }
         }
     </style>
 </head>
 
 <body>
-
-<header class="navbar">
-
-    <a href="index.html" class="logo-link">
-
-        <img src="logo.png"
-             alt="Logo Blainville RP QC"
-             class="site-logo">
-
+    <nav class="navbar">
         <div class="logo-text">
-
-            <span class="logo-bold">
-                BLAINVILLE
-            </span>
-
-            <span class="logo-tag">
-                RP QC
-            </span>
-
+            BLAINVILLE <span class="logo-tag">RP QC</span>
         </div>
-
-    </a>
-
-    <nav class="nav-links">
-
-        <a href="index.html">
-            Accueil
-        </a>
-
-        <a href="reglement.html">
-            Règlement
-        </a>
-
-        <a href="roleplay.html"
-           class="active">
-            Roleplay
-        </a>
-
     </nav>
 
-    <a href="https://discord.gg/9xUYtvceWm"
-       target="_blank"
-       class="btn-discord">
+    <main class="page-container">
+        <header class="page-header">
+            <h1>Blainville <span>RP QC</span></h1>
+            <p>Téléphone en jeu de rôle</p>
+        </header>
 
-        <i class="fa-brands fa-discord"></i>
-        Rejoindre
+        <div class="phone-wrapper">
+            <div class="phone-screen" id="phone-screen">
+                <div class="phone-notch"></div>
 
-    </a>
+                <div class="status-bar">
+                    <span id="clock">00:00</span>
+                    <span><i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i></span>
+                </div>
 
-</header>
+                <div id="phone-notif" class="phone-notif"></div>
 
-<main class="page-container">
+                <section class="app-view active" id="home">
+                    <h2 class="profile-name">Nathan</h2>
+                    <p style="font-size:.8rem;color:var(--text-muted)">Bienvenue sur ton téléphone</p>
 
-    <div class="page-header">
+                    <div class="home-grid">
+                        <div class="app-icon" onclick="openApp('settings')">
+                            <div class="icon-box" style="background:#64748b"><i class="fas fa-gear"></i></div>
+                            <span class="app-label">Réglages</span>
+                        </div>
+                        <div class="app-icon" onclick="openApp('bank')">
+                            <div class="icon-box" style="background:#0284c7"><i class="fas fa-building-columns"></i></div>
+                            <span class="app-label">Banque</span>
+                        </div>
+                        <div class="app-icon" onclick="openApp('account')">
+                            <div class="icon-box" style="background:#16a34a"><i class="fas fa-user"></i></div>
+                            <span class="app-label">Compte</span>
+                        </div>
+                        <div class="app-icon" onclick="showNotification('Aucune notification')">
+                            <div class="icon-box" style="background:#7c3aed"><i class="fas fa-bell"></i></div>
+                            <span class="app-label">Notifications</span>
+                        </div>
+                    </div>
+                </section>
 
-        <h1>
-            Espace <span>Roleplay</span>
-        </h1>
+                <section class="app-view" id="settings">
+                    <div class="app-header">
+                        <span>Réglages</span>
+                        <span class="btn-back" onclick="openApp('home')">Retour</span>
+                    </div>
 
-        <p>
-            Interface système BlainOS pour Blainville RP QC.
-        </p>
+                    <div class="settings-group">
+                        <div class="settings-item" onclick="setTheme('dark')">
+                            <div class="settings-item-left">
+                                <div class="settings-icon" style="background:#334155"><i class="fas fa-moon"></i></div>
+                                <span>Thème sombre</span>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                        <div class="settings-item" onclick="setTheme('light')">
+                            <div class="settings-item-left">
+                                <div class="settings-icon" style="background:#e5e7eb;color:#111"><i class="fas fa-sun"></i></div>
+                                <span>Thème clair</span>
+                            </div>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
 
-    </div>
+                    <div class="settings-group" style="padding:12px">
+                        <h3 style="margin-bottom:8px">Fonds d'écran</h3>
+                        <div class="wallpaper-grid">
+                            <div class="wallpaper-card" id="wp-Gris" style="background:linear-gradient(to bottom,#0f172a,#1e293b)" onclick="setWallpaper('Gris','linear-gradient(to bottom,#0f172a,#1e293b)')">Gris</div>
+                            <div class="wallpaper-card" id="wp-Bleu" style="background:linear-gradient(to bottom,#0c4a6e,#2563eb)" onclick="setWallpaper('Bleu','linear-gradient(to bottom,#0c4a6e,#2563eb)')">Bleu</div>
+                            <div class="wallpaper-card" id="wp-Rouge" style="background:linear-gradient(to bottom,#7f1d1d,#ef4444)" onclick="setWallpaper('Rouge','linear-gradient(to bottom,#7f1d1d,#ef4444)')">Rouge</div>
+                            <div class="wallpaper-card" id="wp-Violet" style="background:linear-gradient(to bottom,#4c1d95,#a855f7)" onclick="setWallpaper('Violet','linear-gradient(to bottom,#4c1d95,#a855f7)')">Violet</div>
+                            <div class="wallpaper-card" id="wp-Vert" style="background:linear-gradient(to bottom,#14532d,#22c55e)" onclick="setWallpaper('Vert','linear-gradient(to bottom,#14532d,#22c55e)')">Vert</div>
+                            <div class="wallpaper-card" id="wp-Noir" style="background:linear-gradient(to bottom,#000,#374151)" onclick="setWallpaper('Noir','linear-gradient(to bottom,#000,#374151)')">Noir</div>
+                            <div class="wallpaper-card" id="wp-Orange" style="background:linear-gradient(to bottom,#9a3412,#fb923c)" onclick="setWallpaper('Orange','linear-gradient(to bottom,#9a3412,#fb923c)')">Orange</div>
+                            <div class="wallpaper-card" id="wp-Rose" style="background:linear-gradient(to bottom,#831843,#f472b6)" onclick="setWallpaper('Rose','linear-gradient(to bottom,#831843,#f472b6)')">Rose</div>
+                        </div>
 
-    <div class="phone-wrapper">
+                        <h3 style="margin:8px 0">Couleur personnalisée</h3>
+                        <input class="phone-input" type="color" id="custom-wallpaper-color" value="#3498DB" onchange="syncWallpaperHex(this.value)">
+                        <input class="phone-input" type="text" id="custom-wallpaper-hex" value="#3498DB" maxlength="7" placeholder="#3498DB" oninput="syncWallpaperColor(this.value)">
+                        <button class="phone-btn" onclick="applyCustomWallpaper()">Appliquer la couleur</button>
+                    </div>
 
-        <div class="phone-notch"></div>
+                    <div class="settings-group">
+                        <div class="settings-item" onclick="toggleLockState(!lockEnabled)">
+                            <div class="settings-item-left">
+                                <div class="settings-icon" style="background:#dc2626"><i class="fas fa-lock"></i></div>
+                                <span>Verrouillage du téléphone</span>
+                            </div>
+                            <span id="lbl-lock">Activé</span>
+                        </div>
+                        <input class="phone-input" id="new-pin-input" maxlength="4" placeholder="Nouveau code PIN (4 chiffres)" style="margin:10px;width:calc(100% - 20px)">
+                        <button class="phone-btn" style="width:calc(100% - 20px);margin:0 10px 10px" onclick="saveNewPin()">Changer le code PIN</button>
+                    </div>
+                </section>
 
-        <div class="phone-screen"
-             id="phone-screen">
+                <section class="app-view" id="account">
+                    <div class="app-header">
+                        <span>Compte</span>
+                        <span class="btn-back" onclick="openApp('home')">Retour</span>
+                    </div>
+                    <div class="settings-group" style="padding:12px">
+                        <label for="account-name-input">Nom du téléphone</label>
+                        <input class="phone-input" id="account-name-input" placeholder="Ton nom">
+                        <button class="phone-btn" onclick="saveAccountDetails()">Enregistrer</button>
+                        <p style="font-size:.8rem;color:var(--text-muted)">Numéro : <span id="account-phone-display"></span></p>
+                    </div>
+                </section>
 
-            <div class="phone-notif"
-                 id="phone-notif">
+                <section class="app-view" id="bank">
+                    <div class="app-header">
+                        <span>Banque RP</span>
+                        <span class="btn-back" onclick="openApp('home')">Retour</span>
+                    </div>
+
+                    <div class="bank-card">
+                        <div style="display:flex;justify-content:space-between">
+                            <strong>BLV BANQUE</strong>
+                            <i class="fas fa-wifi"></i>
+                        </div>
+                        <div style="margin:24px 0 12px;letter-spacing:2px">7015 4813 7877 7749</div>
+                        <div style="display:flex;justify-content:space-between;font-size:.7rem">
+                            <span class="profile-name">Nathan</span>
+                            <span>03/34</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-group" style="padding:12px">
+                        <p>Solde bancaire</p>
+                        <h2 id="bank-balance">10 000 $</h2>
+                        <p style="margin-top:10px">Argent comptant</p>
+                        <h3 id="cash-balance">0 $</h3>
+                    </div>
+
+                    <div class="bank-actions">
+                        <button class="bank-action-btn" onclick="depositMoney()"><i class="fas fa-arrow-down"></i> Dépôt</button>
+                        <button class="bank-action-btn" onclick="withdrawMoney()"><i class="fas fa-arrow-up"></i> Retrait</button>
+                        <button class="bank-action-btn" onclick="transferMoney()"><i class="fas fa-right-left"></i> Virement</button>
+                        <button class="bank-action-btn" onclick="claimSalary()"><i class="fas fa-money-bill"></i> Salaire</button>
+                    </div>
+
+                    <div class="settings-group" style="padding:12px">
+                        <p>Code de compte</p>
+                        <strong id="bank-acc-code">RP-7229-1035</strong>
+                        <button class="phone-btn" style="margin-top:10px" onclick="copyBankCode()">Copier le code</button>
+                    </div>
+                </section>
+
+                <div class="phone-dock">
+                    <div class="app-icon" onclick="openApp('home')"><i class="fas fa-house"></i></div>
+                    <div class="app-icon" onclick="openApp('bank')"><i class="fas fa-building-columns"></i></div>
+                    <div class="app-icon" onclick="openApp('settings')"><i class="fas fa-gear"></i></div>
+                </div>
+
+                <div class="home-bar" onclick="openApp('home')"></div>
+
+                <div class="lock-screen" id="lock-screen">
+                    <i class="fas fa-lock" style="font-size:2rem"></i>
+                    <h2 style="margin-top:15px">Téléphone verrouillé</h2>
+                    <p style="font-size:.8rem;color:#94a3b8">Entre ton code PIN</p>
+                    <div class="pin-dots">
+                        <span class="dot" id="dot-0"></span>
+                        <span class="dot" id="dot-1"></span>
+                        <span class="dot" id="dot-2"></span>
+                        <span class="dot" id="dot-3"></span>
+                    </div>
+                    <div class="pin-keypad">
+                        <div class="key-btn" onclick="pressPin('1')">1</div>
+                        <div class="key-btn" onclick="pressPin('2')">2</div>
+                        <div class="key-btn" onclick="pressPin('3')">3</div>
+                        <div class="key-btn" onclick="pressPin('4')">4</div>
+                        <div class="key-btn" onclick="pressPin('5')">5</div>
+                        <div class="key-btn" onclick="pressPin('6')">6</div>
+                        <div class="key-btn" onclick="pressPin('7')">7</div>
+                        <div class="key-btn" onclick="pressPin('8')">8</div>
+                        <div class="key-btn" onclick="pressPin('9')">9</div>
+                        <div class="key-btn" onclick="clearPin()">⌫</div>
+                        <div class="key-btn" onclick="pressPin('0')">0</div>
+                    </div>
+                </div>
             </div>
-
-            <!-- ÉCRAN DE VERROUILLAGE PIN -->
-
-            <div class="lock-screen"
-                 id="lock-screen">
-
-                <i class="fa-solid fa-lock"
-                   style="font-size:2rem; color:#ef4444; margin-bottom:10px;">
-                </i>
-
-                <p style="font-size:0.9rem; font-weight:600;">
-                    Entrez le code PIN
-                </p>
-
-                <p style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">
-                    (Code par défaut : 1234)
-                </p>
-
-                <div class="pin-dots">
-
-                    <div class="dot"
-                         id="dot-0">
-                    </div>
-
-                    <div class="dot"
-                         id="dot-1">
-                    </div>
-
-                    <div class="dot"
-                         id="dot-2">
-                    </div>
-
-                    <div class="dot"
-                         id="dot-3">
-                    </div>
-
-                </div>
-
-                <div class="pin-keypad">
-
-                    <div class="key-btn"
-                         onclick="pressPin('1')">
-                        1
-                    </div>
-
-                    <div class="key-btn"
-                         onclick="pressPin('2')">
-                        2
-                    </div>
-
-                    <div class="key-btn"
-                         onclick="pressPin('3')">
-                        3
-                    </div>
-
-                    <div class="key-btn"
-                         onclick="pressPin('4')">
-                        4
-                    </div>
-
-                    <div class="key-btn"
-                         onclick="pressPin('5')">
-                        5
-                    </div>
-
-                    <div class="key-btn"
-                         onclick="pressPin('6')">
-                        6
-                    </div>
-
-                    <div class="key-btn"
-                         onclick="pressPin('7')">
-                        7
-                    </div>
-
-                    <div class="key-btn"
-                         onclick="pressPin('8')">
-                        8
-                    </div>
-
-                    <div class="key-btn"
-                         onclick="pressPin('9')">
-                        9
-                    </div>
-
-                    <div></div>
-
-                    <div class="key-btn"
-                         onclick="pressPin('0')">
-                        0
-                    </div>
-
-                    <div class="key-btn"
-                         onclick="clearPin()">
-
-                        <i class="fa-solid fa-backspace"></i>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- STATUS BAR -->
-
-            <div class="status-bar">
-
-                <span id="clock">
-                    21:31
-                </span>
-
-                <div>
-
-                    <i class="fa-solid fa-signal"></i>
-
-                    <i class="fa-solid fa-wifi"></i>
-
-                    <i class="fa-solid fa-battery-full"></i>
-
-                </div>
-
-            </div>
-
-            <!-- ACCUEIL -->
-
-            <div id="view-home"
-                 class="app-view active">
-
-                <div class="home-grid"
-                     id="home-grid">
-
-                    <div class="app-icon"
-                         onclick="openApp('view-settings')">
-
-                        <div class="icon-box"
-                             style="background:#64748b;">
-
-                            <i class="fa-solid fa-gear"></i>
-
-                        </div>
-
-                        <span class="app-label">
-                            Réglages
-                        </span>
-
-                    </div>
-
-                    <div class="app-icon"
-                         onclick="openApp('view-bank')">
-
-                        <div class="icon-box"
-                             style="background:#0284c7;">
-
-                            <i class="fa-solid fa-building-columns"></i>
-
-                        </div>
-
-                        <span class="app-label">
-                            Banque
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- RÉGLAGES -->
-
-            <div id="view-settings"
-                 class="app-view">
-
-                <div class="app-header">
-
-                    <span class="btn-back"
-                          onclick="openApp('view-home')">
-
-                        <i class="fa-solid fa-chevron-left"></i>
-                        Retour
-
-                    </span>
-
-                </div>
-
-                <h2 style="font-size:1.6rem; font-weight:800; margin-bottom:12px;">
-                    Réglages
-                </h2>
-
-                <div class="settings-group">
-
-                    <div class="settings-item"
-                         onclick="openApp('view-settings-account')">
-
-                        <div class="settings-item-left">
-
-                            <div class="settings-icon"
-                                 style="background:#475569;">
-
-                                <i class="fa-solid fa-user"></i>
-
-                            </div>
-
-                            <div>
-
-                                <strong class="profile-name"
-                                        style="font-size:0.9rem;">
-                                    Nathan
-                                </strong>
-
-                                <p style="font-size:0.65rem; color:var(--text-muted);">
-                                    Compte BlainOS, Profil RP, etc.
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                        <i class="fa-solid fa-chevron-right"
-                           style="color:var(--text-muted); font-size:0.75rem;">
-                        </i>
-
-                    </div>
-
-                </div>
-
-                <div class="settings-group">
-
-                    <div class="settings-item"
-                         style="cursor:default;">
-
-                        <div class="settings-item-left">
-
-                            <div class="settings-icon"
-                                 style="background:#22c55e;">
-
-                                <i class="fa-solid fa-phone"></i>
-
-                            </div>
-
-                            <span>
-                                Mon numéro
-                            </span>
-
-                        </div>
-
-                        <span style="color:var(--text-muted); font-size:0.8rem;">
-
-                            <span id="account-phone-display">
-                                555-000-0000
-                            </span>
-
-                            <i class="fa-regular fa-copy"></i>
-
-                        </span>
-
-                    </div>
-
-                </div>
-
-                <div class="settings-group">
-
-                    <div class="settings-item"
-                         onclick="openApp('view-settings-theme')">
-
-                        <div class="settings-item-left">
-
-                            <div class="settings-icon"
-                                 style="background:#8b5cf6;">
-
-                                <i class="fa-solid fa-palette"></i>
-
-                            </div>
-
-                            <span>
-                                Thème
-                            </span>
-
-                        </div>
-
-                        <div class="settings-item-right">
-
-                            <span id="lbl-theme">
-                                Sombre
-                            </span>
-
-                            <i class="fa-solid fa-chevron-right"></i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="settings-item"
-                         onclick="openApp('view-settings-textsize')">
-
-                        <div class="settings-item-left">
-
-                            <div class="settings-icon"
-                                 style="background:#6366f1;">
-
-                                <i class="fa-solid fa-font"></i>
-
-                            </div>
-
-                            <span>
-                                Taille du texte
-                            </span>
-
-                        </div>
-
-                        <div class="settings-item-right">
-
-                            <span id="lbl-textsize">
-                                Normal
-                            </span>
-
-                            <i class="fa-solid fa-chevron-right"></i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="settings-item"
-                         onclick="openApp('view-settings-wallpaper')">
-
-                        <div class="settings-item-left">
-
-                            <div class="settings-icon"
-                                 style="background:#06b6d4;">
-
-                                <i class="fa-solid fa-image"></i>
-
-                            </div>
-
-                            <span>
-                                Fond d'écran
-                            </span>
-
-                        </div>
-
-                        <div class="settings-item-right">
-
-                            <span id="lbl-wallpaper">
-                                Blainville
-                            </span>
-
-                            <i class="fa-solid fa-chevron-right"></i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="settings-item"
-                         onclick="openApp('view-settings-notifs')">
-
-                        <div class="settings-item-left">
-
-                            <div class="settings-icon"
-                                 style="background:#ef4444;">
-
-                                <i class="fa-solid fa-bell"></i>
-
-                            </div>
-
-                            <span>
-                                Notifications
-                            </span>
-
-                        </div>
-
-                        <div class="settings-item-right">
-
-                            <span id="lbl-notifs">
-                                Activé
-                            </span>
-
-                            <i class="fa-solid fa-chevron-right"></i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="settings-item"
-                         onclick="openApp('view-settings-calls')">
-
-                        <div class="settings-item-left">
-
-                            <div class="settings-icon"
-                                 style="background:#f59e0b;">
-
-                                <i class="fa-solid fa-percent"></i>
-
-                            </div>
-
-                            <span>
-                                Appels
-                            </span>
-
-                        </div>
-
-                        <div class="settings-item-right">
-
-                            <span id="lbl-calls">
-                                Désactivé
-                            </span>
-
-                            <i class="fa-solid fa-chevron-right"></i>
-
-                        </div>
-
-                    </div>
-
-                    <div class="settings-item"
-                         onclick="openApp('view-settings-lock')">
-
-                        <div class="settings-item-left">
-
-                            <div class="settings-icon"
-                                 style="background:#eab308;">
-
-                                <i class="fa-solid fa-lock"></i>
-
-                            </div>
-
-                            <span>
-                                Code de verrouillage
-                            </span>
-
-                        </div>
-
-                        <div class="settings-item-right">
-
-                            <span id="lbl-lock">
-                                Activé
-                            </span>
-
-                            <i class="fa-solid fa-chevron-right"></i>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- COMPTE -->
-
-            <div id="view-settings-account"
-                 class="app-view">
-
-                <div class="app-header">
-
-                    <span class="btn-back"
-                          onclick="openApp('view-settings')">
-
-                        <i class="fa-solid fa-chevron-left"></i>
-                        Retour
-
-                    </span>
-
-                </div>
-
-                <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:12px;">
-                    Compte BlainOS
-                </h2>
-
-                <div style="text-align:center; margin-bottom:14px;">
-
-                    <div style="width:60px; height:60px; border-radius:50%; background:#334155; margin:0 auto 8px auto; display:flex; align-items:center; justify-content:center; font-size:1.8rem; color:#fff;">
-
-                        <i class="fa-solid fa-user"></i>
-
-                    </div>
-
-                    <strong class="profile-name"
-                            style="font-size:1.1rem;">
-                        Nathan
-                    </strong>
-
-                </div>
-
-                <label style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">
-                    IDENTITÉ
-                </label>
-
-                <input type="text"
-                       id="account-name-input"
-                       class="phone-input"
-                       value="Nathan">
-
-                <input type="email"
-                       id="account-email-input"
-                       class="phone-input"
-                       placeholder="Email RP">
-
-                <button class="phone-btn"
-                        onclick="saveAccountDetails()">
-
-                    Enregistrer
-
-                </button>
-
-            </div>
-
-            <!-- THÈME -->
-
-            <div id="view-settings-theme"
-                 class="app-view">
-
-                <div class="app-header">
-
-                    <span class="btn-back"
-                          onclick="openApp('view-settings')">
-
-                        <i class="fa-solid fa-chevron-left"></i>
-                        Retour
-
-                    </span>
-
-                </div>
-
-                <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:12px;">
-                    Thème
-                </h2>
-
-                <div class="settings-group">
-
-                    <div class="settings-item"
-                         onclick="setTheme('dark')">
-
-                        <span>
-
-                            <i class="fa-solid fa-moon"
-                               style="margin-right:8px;">
-                            </i>
-
-                            Sombre
-
-                        </span>
-
-                        <i class="fa-solid fa-check"
-                           id="check-theme-dark"
-                           style="color:#2563eb;">
-                        </i>
-
-                    </div>
-
-                    <div class="settings-item"
-                         onclick="setTheme('light')">
-
-                        <span>
-
-                            <i class="fa-solid fa-sun"
-                               style="margin-right:8px;">
-                            </i>
-
-                            Clair
-
-                        </span>
-
-                        <i class="fa-solid fa-check"
-                           id="check-theme-light"
-                           style="color:#2563eb; display:none;">
-                        </i>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- TAILLE DU TEXTE -->
-
-            <div id="view-settings-textsize"
-                 class="app-view">
-
-                <div class="app-header">
-
-                    <span class="btn-back"
-                          onclick="openApp('view-settings')">
-
-                        <i class="fa-solid fa-chevron-left"></i>
-                        Retour
-
-                    </span>
-
-                </div>
-
-                <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:12px;">
-                    Taille du texte
-                </h2>
-
-                <div class="settings-group">
-
-                    <div class="settings-item"
-                         onclick="setTextSize('Petit')">
-
-                        <span>
-                            Petit
-                        </span>
-
-                        <i class="fa-solid fa-check"
-                           id="check-size-petit"
-                           style="color:#2563eb; display:none;">
-                        </i>
-
-                    </div>
-
-                    <div class="settings-item"
-                         onclick="setTextSize('Normal')">
-
-                        <span>
-                            Normal
-                        </span>
-
-                        <i class="fa-solid fa-check"
-                           id="check-size-normal"
-                           style="color:#2563eb;">
-                        </i>
-
-                    </div>
-
-                    <div class="settings-item"
-                         onclick="setTextSize('Grand')">
-
-                        <span>
-                            Grand
-                        </span>
-
-                        <i class="fa-solid fa-check"
-                           id="check-size-grand"
-                           style="color:#2563eb; display:none;">
-                        </i>
-
-                    </div>
-
-                </div>
-
-                <div class="settings-group">
-
-                    <div class="settings-item">
-
-                        <span>
-                            Texte en gras
-                        </span>
-
-                        <label class="switch">
-
-                            <input type="checkbox"
-                                   id="toggle-bold"
-                                   onchange="toggleBoldText(this.checked)">
-
-                            <span class="slider"></span>
-
-                        </label>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- FONDS D'ÉCRAN -->
-
-            <div id="view-settings-wallpaper"
-                 class="app-view">
-
-                <div class="app-header">
-
-                    <span class="btn-back"
-                          onclick="openApp('view-settings')">
-
-                        <i class="fa-solid fa-chevron-left"></i>
-                        Retour
-
-                    </span>
-
-                </div>
-
-                <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:8px;">
-                    Fond d'écran
-                </h2>
-
-                <div class="wallpaper-grid">
-
-                    <div class="wallpaper-card selected"
-                         id="wp-Blainville"
-                         style="background:linear-gradient(to bottom, #0f172a, #1e293b);"
-                         onclick="setWallpaper('Blainville', 'linear-gradient(to bottom, #0f172a, #1e293b)')">
-
-                        Blainville
-
-                    </div>
-
-                    <div class="wallpaper-card"
-                         id="wp-Océan"
-                         style="background:linear-gradient(to bottom, #0284c7, #0f172a);"
-                         onclick="setWallpaper('Océan', 'linear-gradient(to bottom, #0284c7, #0f172a)')">
-
-                        Océan
-
-                    </div>
-
-                    <div class="wallpaper-card"
-                         id="wp-Crépuscule"
-                         style="background:linear-gradient(to bottom, #ea580c, #0f172a);"
-                         onclick="setWallpaper('Crépuscule', 'linear-gradient(to bottom, #ea580c, #0f172a)')">
-
-                        Crépuscule
-
-                    </div>
-
-                    <div class="wallpaper-card"
-                         id="wp-Noir"
-                         style="background:#000000;"
-                         onclick="setWallpaper('Noir', '#000000')">
-
-                        Noir
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- NOTIFICATIONS -->
-
-            <div id="view-settings-notifs"
-                 class="app-view">
-
-                <div class="app-header">
-
-                    <span class="btn-back"
-                          onclick="openApp('view-settings')">
-
-                        <i class="fa-solid fa-chevron-left"></i>
-                        Retour
-
-                    </span>
-
-                </div>
-
-                <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:12px;">
-                    Notifications
-                </h2>
-
-                <div class="settings-group">
-
-                    <div class="settings-item">
-
-                        <span>
-                            Sons
-                        </span>
-
-                        <label class="switch">
-
-                            <input type="checkbox"
-                                   checked>
-
-                            <span class="slider"></span>
-
-                        </label>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- APPELS -->
-
-            <div id="view-settings-calls"
-                 class="app-view">
-
-                <div class="app-header">
-
-                    <span class="btn-back"
-                          onclick="openApp('view-settings')">
-
-                        <i class="fa-solid fa-chevron-left"></i>
-                        Retour
-
-                    </span>
-
-                </div>
-
-                <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:12px;">
-                    Appels
-                </h2>
-
-                <div class="settings-group">
-
-                    <div class="settings-item">
-
-                        <span>
-                            Bloquer les appels masqués
-                        </span>
-
-                        <label class="switch">
-
-                            <input type="checkbox">
-
-                            <span class="slider"></span>
-
-                        </label>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- CODE DE VERROUILLAGE -->
-
-            <div id="view-settings-lock"
-                 class="app-view">
-
-                <div class="app-header">
-
-                    <span class="btn-back"
-                          onclick="openApp('view-settings')">
-
-                        <i class="fa-solid fa-chevron-left"></i>
-                        Retour
-
-                    </span>
-
-                </div>
-
-                <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:12px;">
-                    Code de verrouillage
-                </h2>
-
-                <div class="settings-group">
-
-                    <div class="settings-item">
-
-                        <span>
-                            Activer le verrouillage
-                        </span>
-
-                        <label class="switch">
-
-                            <input type="checkbox"
-                                   id="toggle-lock-active"
-                                   onchange="toggleLockState(this.checked)">
-
-                            <span class="slider"></span>
-
-                        </label>
-
-                    </div>
-
-                </div>
-
-                <label style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; display:block;">
-                    CHANGER LE CODE PIN (4 CHIFFRES)
-                </label>
-
-                <input type="password"
-                       id="new-pin-input"
-                       class="phone-input"
-                       maxlength="4"
-                       placeholder="Nouveau code (ex: 1234)">
-
-                <button class="phone-btn"
-                        onclick="saveNewPin()">
-
-                    Changer le code
-
-                </button>
-
-            </div>
-
-            <!-- BANQUE -->
-
-            <div id="view-bank"
-                 class="app-view">
-
-                <div class="app-header">
-
-                    <span class="btn-back"
-                          onclick="openApp('view-home')">
-
-                        <i class="fa-solid fa-chevron-left"></i>
-                        Retour
-
-                    </span>
-
-                </div>
-
-                <h2 style="font-size:1.2rem; font-weight:800; margin-bottom:8px;">
-                    Blainville National Bank
-                </h2>
-
-                <div class="bank-card">
-
-                    <div class="bank-card-top">
-
-                        <span class="bank-card-title">
-                            BNB Card
-                        </span>
-
-                        <div class="bank-card-chip"></div>
-
-                    </div>
-
-                    <div class="bank-card-num">
-                        •••• •••• •••• 7749
-                    </div>
-
-                    <div class="bank-card-bottom">
-
-                        <div>
-
-                            <div style="font-size:0.55rem; color:#94a3b8;">
-                                TITULAIRE
-                            </div>
-
-                            <div class="profile-name">
-                                NATHAN
-                            </div>
-
-                        </div>
-
-                        <div>
-
-                            <div style="font-size:0.55rem; color:#94a3b8;">
-                                EXP
-                            </div>
-
-                            <div>
-                                03/34
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <div class="bank-actions">
-
-                    <button class="bank-action-btn"
-                            onclick="toggleBankModal(true)">
-
-                        <i class="fa-regular fa-eye"></i>
-                        Codes
-
-                    </button>
-
-                    <button class="bank-action-btn"
-                            onclick="showNotification('Carte gelée / dégelée')">
-
-                        <i class="fa-solid fa-snowflake"></i>
-                        Geler
-
-                    </button>
-
-                </div>
-
-                <div class="settings-group">
-
-                    <div class="settings-item"
-                         style="cursor:default;">
-
-                        <div>
-
-                            <div style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase;">
-                                Code du compte
-                            </div>
-
-                            <strong id="bank-acc-code"
-                                    style="font-size:0.85rem;">
-                                RP-7229-1035
-                            </strong>
-
-                        </div>
-
-                        <i class="fa-regular fa-copy"
-                           style="color:var(--text-muted); cursor:pointer;"
-                           onclick="copyBankCode()">
-                        </i>
-
-                    </div>
-
-                </div>
-
-                <div class="settings-group">
-
-                    <div class="settings-item">
-
-                        <span>
-                            Compte bancaire
-                        </span>
-
-                        <strong style="color:#22c55e;">
-                            10,000 $
-                        </strong>
-
-                    </div>
-
-                    <div class="settings-item">
-
-                        <span>
-                            Argent liquide
-                        </span>
-
-                        <strong style="color:var(--text-muted);">
-                            0 $
-                        </strong>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- MODALE CODES BANCAIRES -->
-
-            <div class="bank-modal"
-                 id="bank-modal">
-
-                <div class="bank-modal-content">
-
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-
-                        <strong style="font-size:0.9rem;">
-                            Codes de la carte
-                        </strong>
-
-                        <i class="fa-solid fa-xmark"
-                           style="cursor:pointer;"
-                           onclick="toggleBankModal(false)">
-                        </i>
-
-                    </div>
-
-                    <div class="modal-item">
-
-                        <div>
-
-                            <div style="font-size:0.6rem; color:var(--text-muted);">
-                                NUMÉRO DE CARTE
-                            </div>
-
-                            <span id="modal-card-num"
-                                  style="font-size:0.8rem; font-weight:600;">
-
-                                •••• •••• •••• 7749
-
-                            </span>
-
-                        </div>
-
-                        <i class="fa-regular fa-eye"
-                           style="cursor:pointer;"
-                           onclick="toggleSecret('modal-card-num', '7015 4813 7877 7749')">
-                        </i>
-
-                    </div>
-
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-
-                        <div class="modal-item">
-
-                            <div>
-
-                                <div style="font-size:0.6rem; color:var(--text-muted);">
-                                    EXPIRE
-                                </div>
-
-                                <span id="modal-card-exp"
-                                      style="font-size:0.8rem; font-weight:600;">
-
-                                    ••/••
-
-                                </span>
-
-                            </div>
-
-                            <i class="fa-regular fa-eye"
-                               style="cursor:pointer;"
-                               onclick="toggleSecret('modal-card-exp', '03/34')">
-                            </i>
-
-                        </div>
-
-                        <div class="modal-item">
-
-                            <div>
-
-                                <div style="font-size:0.6rem; color:var(--text-muted);">
-                                    CVV
-                                </div>
-
-                                <span id="modal-card-cvv"
-                                      style="font-size:0.8rem; font-weight:600;">
-
-                                    •••
-
-                                </span>
-
-                            </div>
-
-                            <i class="fa-regular fa-eye"
-                               style="cursor:pointer;"
-                               onclick="toggleSecret('modal-card-cvv', '842')">
-                            </i>
-
-                        </div>
-
-                    </div>
-
-                    <button class="phone-btn"
-                            style="margin-top:8px;"
-                            onclick="toggleBankModal(false)">
-
-                        Fermer
-
-                    </button>
-
-                </div>
-
-            </div>
-
-            <!-- DOCK SANS MOTORS -->
-
-            <div class="phone-dock">
-
-                <div class="icon-box"
-                     style="background:#64748b; width:42px; height:42px; font-size:0.95rem;"
-                     onclick="openApp('view-settings')">
-
-                    <i class="fa-solid fa-gear"></i>
-
-                </div>
-
-                <div class="icon-box"
-                     style="background:#0284c7; width:42px; height:42px; font-size:0.95rem;"
-                     onclick="openApp('view-bank')">
-
-                    <i class="fa-solid fa-building-columns"></i>
-
-                </div>
-
-            </div>
-
-            <div class="home-bar"
-                 onclick="openApp('view-home')">
-            </div>
-
         </div>
+    </main>
 
-    </div>
-
-</main>
-
-<footer>
-
-    <p>
-        &copy; 2026 Blainville RP QC. Tous droits réservés.
-    </p>
-
-</footer>
-
-<script>
-
-    function getOrGeneratePhoneNumber() {
-
-        let savedPhone =
-            localStorage.getItem('phone_number');
-
-        if (!savedPhone) {
-
-            const prefix =
-                Math.floor(100 + Math.random() * 900);
-
-            const suffix =
-                Math.floor(1000 + Math.random() * 9000);
-
-            savedPhone =
-                `555-${prefix}-${suffix}`;
-
-            localStorage.setItem(
-                'phone_number',
-                savedPhone
-            );
-
+    <script>
+        function getOrGeneratePhoneNumber() {
+            let phone = localStorage.getItem("phone_number");
+            if (!phone) {
+                phone = `555-${Math.floor(100 + Math.random()*900)}-${Math.floor(1000 + Math.random()*9000)}`;
+                localStorage.setItem("phone_number", phone);
+            }
+            return phone;
         }
 
-        return savedPhone;
-    }
+        let userName = localStorage.getItem("phone_userName") || "Nathan";
+        let currentTheme = localStorage.getItem("phone_theme") || "dark";
+        let wallpaperName = localStorage.getItem("phone_wpName") || "Gris";
+        let wallpaperBg = localStorage.getItem("phone_wpBg") || "linear-gradient(to bottom,#0f172a,#1e293b)";
+        let lockEnabled = localStorage.getItem("phone_lockEnabled") !== "false";
+        let currentPin = localStorage.getItem("phone_pin") || "1234";
+        let enteredPin = "";
 
-    let userName =
-        localStorage.getItem('phone_userName') ||
-        'Nathan';
+        document.addEventListener("DOMContentLoaded", () => {
+            applySavedSettings();
+            checkLockScreen();
+            updateBankDisplay();
+        });
 
-    let currentTheme =
-        localStorage.getItem('phone_theme') ||
-        'dark';
-
-    let textSize =
-        localStorage.getItem('phone_textSize') ||
-        'Normal';
-
-    let wallpaperName =
-        localStorage.getItem('phone_wpName') ||
-        'Blainville';
-
-    let wallpaperBg =
-        localStorage.getItem('phone_wpBg') ||
-        'linear-gradient(to bottom, #0f172a, #1e293b)';
-
-    let lockEnabled =
-        localStorage.getItem('phone_lockEnabled') !== 'false';
-
-    let currentPin =
-        localStorage.getItem('phone_pin') ||
-        '1234';
-
-    let enteredPin = "";
-
-    document.addEventListener('DOMContentLoaded', () => {
-
-        applySavedSettings();
-        checkLockScreen();
-
-    });
-
-    function checkLockScreen() {
-
-        const lockScreen =
-            document.getElementById('lock-screen');
-
-        if (lockEnabled) {
-
-            lockScreen.style.display =
-                'flex';
-
-        } else {
-
-            lockScreen.style.display =
-                'none';
-
+        function checkLockScreen() {
+            document.getElementById("lock-screen").style.display = lockEnabled ? "flex" : "none";
         }
 
-    }
-
-    function pressPin(num) {
-
-        if (enteredPin.length < 4) {
-
-            enteredPin += num;
-
+        function pressPin(number) {
+            if (enteredPin.length >= 4) return;
+            enteredPin += number;
             updatePinDots();
 
+            if (enteredPin.length === 4) {
+                setTimeout(() => {
+                    if (enteredPin === currentPin) {
+                        document.getElementById("lock-screen").style.display = "none";
+                    } else {
+                        showNotification("Code PIN incorrect !");
+                    }
+                    enteredPin = "";
+                    updatePinDots();
+                }, 200);
+            }
         }
 
-        if (enteredPin.length === 4) {
-
-            setTimeout(() => {
-
-                if (enteredPin === currentPin) {
-
-                    document.getElementById(
-                        'lock-screen'
-                    ).style.display = 'none';
-
-                    enteredPin = "";
-
-                    updatePinDots();
-
-                } else {
-
-                    showNotification(
-                        "Code PIN incorrect !"
-                    );
-
-                    enteredPin = "";
-
-                    updatePinDots();
-
-                }
-
-            }, 200);
-
+        function clearPin() {
+            enteredPin = enteredPin.slice(0, -1);
+            updatePinDots();
         }
 
-    }
+        function updatePinDots() {
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`dot-${i}`).classList.toggle("active", i < enteredPin.length);
+            }
+        }
 
-    function clearPin() {
+        function toggleLockState(enabled) {
+            lockEnabled = enabled;
+            localStorage.setItem("phone_lockEnabled", enabled);
+            document.getElementById("lbl-lock").innerText = enabled ? "Activé" : "Désactivé";
+            showNotification(enabled ? "Verrouillage activé" : "Verrouillage désactivé");
+        }
 
-        enteredPin =
-            enteredPin.slice(0, -1);
+        function saveNewPin() {
+            const pin = document.getElementById("new-pin-input").value.trim();
+            if (!/^\d{4}$/.test(pin)) {
+                showNotification("Le code doit contenir 4 chiffres !");
+                return;
+            }
+            currentPin = pin;
+            localStorage.setItem("phone_pin", pin);
+            document.getElementById("new-pin-input").value = "";
+            showNotification("Nouveau code PIN enregistré !");
+        }
 
-        updatePinDots();
+        function openApp(appId) {
+            document.querySelectorAll(".app-view").forEach(view => view.classList.remove("active"));
+            const app = document.getElementById(appId);
+            if (app) {
+                app.classList.add("active");
+                app.scrollTop = 0;
+            }
+        }
 
-    }
+        function showNotification(message) {
+            const notification = document.getElementById("phone-notif");
+            notification.innerText = message;
+            notification.style.display = "block";
+            setTimeout(() => notification.style.display = "none", 3000);
+        }
 
-    function updatePinDots() {
+        function saveAccountDetails() {
+            const name = document.getElementById("account-name-input").value.trim();
+            if (!name) return;
+            userName = name;
+            localStorage.setItem("phone_userName", userName);
+            document.querySelectorAll(".profile-name").forEach(el => el.innerText = userName);
+            showNotification("Profil sauvegardé !");
+        }
 
-        for (let i = 0; i < 4; i++) {
+        function setTheme(theme) {
+            currentTheme = theme;
+            localStorage.setItem("phone_theme", theme);
+            document.getElementById("phone-screen").classList.toggle("theme-light", theme === "light");
+            showNotification(`Thème ${theme === "light" ? "clair" : "sombre"} appliqué.`);
+        }
 
-            const dot =
-                document.getElementById(`dot-${i}`);
+        function syncWallpaperHex(color) {
+            document.getElementById("custom-wallpaper-hex").value = color.toUpperCase();
+        }
 
-            if (i < enteredPin.length) {
+        function syncWallpaperColor(hex) {
+            hex = hex.trim();
+            if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+                document.getElementById("custom-wallpaper-color").value = hex;
+            }
+        }
 
-                dot.classList.add('active');
+        function applyCustomWallpaper() {
+            let hex = document.getElementById("custom-wallpaper-hex").value.trim();
+            if (!hex.startsWith("#")) hex = "#" + hex;
 
-            } else {
-
-                dot.classList.remove('active');
-
+            if (!/^#[0-9a-fA-F]{6}$/.test(hex)) {
+                showNotification("Code HEX invalide. Exemple : #3498DB");
+                return;
             }
 
+            hex = hex.toUpperCase();
+            syncWallpaperHex(hex);
+            document.getElementById("custom-wallpaper-color").value = hex;
+            setWallpaper("Personnalisé", hex);
         }
 
-    }
+        function setWallpaper(name, background) {
+            wallpaperName = name;
+            wallpaperBg = background;
+            localStorage.setItem("phone_wpName", name);
+            localStorage.setItem("phone_wpBg", background);
 
-    function toggleLockState(enabled) {
+            document.getElementById("phone-screen").style.background = background;
+            document.getElementById("lbl-wallpaper")?.innerText = name;
 
-        lockEnabled = enabled;
-
-        localStorage.setItem(
-            'phone_lockEnabled',
-            enabled
-        );
-
-        document.getElementById(
-            'lbl-lock'
-        ).innerText =
-            enabled
-                ? 'Activé'
-                : 'Désactivé';
-
-        showNotification(
-            enabled
-                ? "Verrouillage activé"
-                : "Verrouillage désactivé"
-        );
-
-    }
-
-    function saveNewPin() {
-
-        const newPin =
-            document.getElementById(
-                'new-pin-input'
-            ).value.trim();
-
-        if (
-            newPin.length === 4 &&
-            !isNaN(newPin)
-        ) {
-
-            currentPin = newPin;
-
-            localStorage.setItem(
-                'phone_pin',
-                currentPin
-            );
-
-            document.getElementById(
-                'new-pin-input'
-            ).value = "";
-
-            showNotification(
-                "Nouveau code PIN enregistré !"
-            );
-
-        } else {
-
-            showNotification(
-                "Le code doit contenir 4 chiffres !"
-            );
-
+            document.querySelectorAll(".wallpaper-card").forEach(card => card.classList.remove("selected"));
+            document.getElementById(`wp-${name}`)?.classList.add("selected");
+            showNotification(`Fond d'écran : ${name}`);
         }
 
-    }
+        function applySavedSettings() {
+            document.querySelectorAll(".profile-name").forEach(el => el.innerText = userName);
+            document.getElementById("account-name-input").value = userName;
+            document.getElementById("account-phone-display").innerText = getOrGeneratePhoneNumber();
+            document.getElementById("lbl-lock").innerText = lockEnabled ? "Activé" : "Désactivé";
+            document.getElementById("phone-screen").classList.toggle("theme-light", currentTheme === "light");
+            document.getElementById("phone-screen").style.background = wallpaperBg;
 
-    function toggleBankModal(show) {
+            document.querySelectorAll(".wallpaper-card").forEach(card => card.classList.remove("selected"));
+            document.getElementById(`wp-${wallpaperName}`)?.classList.add("selected");
 
-        document.getElementById(
-            'bank-modal'
-        ).style.display =
-            show
-                ? 'flex'
-                : 'none';
-
-    }
-
-    function toggleSecret(
-        elementId,
-        realValue
-    ) {
-
-        const el =
-            document.getElementById(elementId);
-
-        if (
-            el.innerText.includes('•')
-        ) {
-
-            el.innerText =
-                realValue;
-
-        } else {
-
-            if (
-                elementId === 'modal-card-num'
-            )
-                el.innerText =
-                    '•••• •••• •••• 7749';
-
-            if (
-                elementId === 'modal-card-exp'
-            )
-                el.innerText =
-                    '••/••';
-
-            if (
-                elementId === 'modal-card-cvv'
-            )
-                el.innerText =
-                    '•••';
-
+            if (wallpaperName === "Personnalisé" && /^#[0-9A-Fa-f]{6}$/.test(wallpaperBg)) {
+                document.getElementById("custom-wallpaper-color").value = wallpaperBg;
+                document.getElementById("custom-wallpaper-hex").value = wallpaperBg;
+            }
         }
 
-    }
-
-    function copyBankCode() {
-
-        const code =
-            document.getElementById(
-                'bank-acc-code'
-            ).innerText;
-
-        navigator.clipboard.writeText(code);
-
-        showNotification(
-            "Code copié dans le presse-papier !"
-        );
-
-    }
-
-    function applySavedSettings() {
-
-        document
-            .querySelectorAll('.profile-name')
-            .forEach(
-                el => el.innerText = userName
-            );
-
-        document.getElementById(
-            'account-name-input'
-        ).value =
-            userName;
-
-        document.getElementById(
-            'account-phone-display'
-        ).innerText =
-            getOrGeneratePhoneNumber();
-
-        document.getElementById(
-            'toggle-lock-active'
-        ).checked =
-            lockEnabled;
-
-        document.getElementById(
-            'lbl-lock'
-        ).innerText =
-            lockEnabled
-                ? 'Activé'
-                : 'Désactivé';
-
-        setTheme(
-            currentTheme,
-            false
-        );
-
-        setWallpaper(
-            wallpaperName,
-            wallpaperBg,
-            false
-        );
-
-        setTextSize(
-            textSize,
-            false
-        );
-
-    }
-
-    function updateClock() {
-
-        const now =
-            new Date();
-
-        const hours =
-            String(
-                now.getHours()
-            ).padStart(2, '0');
-
-        const minutes =
-            String(
-                now.getMinutes()
-            ).padStart(2, '0');
-
-        document.getElementById(
-            'clock'
-        ).innerText =
-            `${hours}:${minutes}`;
-
-    }
-
-    setInterval(
-        updateClock,
-        1000
-    );
-
-    updateClock();
-
-    function showNotification(text) {
-
-        const notif =
-            document.getElementById(
-                'phone-notif'
-            );
-
-        notif.innerText =
-            text;
-
-        notif.style.display =
-            'block';
-
-        setTimeout(() => {
-
-            notif.style.display =
-                'none';
-
-        }, 3000);
-
-    }
-
-    function openApp(appId) {
-
-        const views =
-            document.querySelectorAll(
-                '.app-view'
-            );
-
-        views.forEach(
-            view =>
-                view.classList.remove(
-                    'active'
-                )
-        );
-
-        const activeView =
-            document.getElementById(
-                appId
-            );
-
-        activeView.classList.add(
-            'active'
-        );
-
-        activeView.scrollTop =
-            0;
-
-    }
-
-    function saveAccountDetails() {
-
-        const name =
-            document.getElementById(
-                'account-name-input'
-            ).value.trim();
-
-        if (name !== "") {
-
-            userName =
-                name;
-
-            localStorage.setItem(
-                'phone_userName',
-                userName
-            );
-
-            document
-                .querySelectorAll(
-                    '.profile-name'
-                )
-                .forEach(
-                    el =>
-                        el.innerText =
-                            userName
-                );
-
-            showNotification(
-                "Profil sauvegardé !"
-            );
-
+        function updateClock() {
+            const now = new Date();
+            document.getElementById("clock").innerText =
+                String(now.getHours()).padStart(2,"0") + ":" +
+                String(now.getMinutes()).padStart(2,"0");
         }
 
-    }
+        setInterval(updateClock, 1000);
+        updateClock();
 
-    function setTheme(
-        theme,
-        notify = true
-    ) {
+        let bankBalance = Number(localStorage.getItem("bank_balance") || 10000);
+        let cashBalance = Number(localStorage.getItem("cash_balance") || 0);
 
-        currentTheme =
-            theme;
-
-        localStorage.setItem(
-            'phone_theme',
-            theme
-        );
-
-        const screen =
-            document.getElementById(
-                'phone-screen'
-            );
-
-        const checkDark =
-            document.getElementById(
-                'check-theme-dark'
-            );
-
-        const checkLight =
-            document.getElementById(
-                'check-theme-light'
-            );
-
-        if (theme === 'light') {
-
-            screen.classList.add(
-                'theme-light'
-            );
-
-            checkDark.style.display =
-                'none';
-
-            checkLight.style.display =
-                'block';
-
-            document.getElementById(
-                'lbl-theme'
-            ).innerText =
-                'Clair';
-
-        } else {
-
-            screen.classList.remove(
-                'theme-light'
-            );
-
-            checkDark.style.display =
-                'block';
-
-            checkLight.style.display =
-                'none';
-
-            document.getElementById(
-                'lbl-theme'
-            ).innerText =
-                'Sombre';
-
+        function updateBankDisplay() {
+            document.getElementById("bank-balance").innerText = bankBalance.toLocaleString("fr-CA") + " $";
+            document.getElementById("cash-balance").innerText = cashBalance.toLocaleString("fr-CA") + " $";
         }
 
-        if (notify) {
-
-            showNotification(
-                `Thème ${
-                    theme === 'light'
-                        ? 'Clair'
-                        : 'Sombre'
-                } appliqué.`
-            );
-
+        function saveBalances() {
+            localStorage.setItem("bank_balance", bankBalance);
+            localStorage.setItem("cash_balance", cashBalance);
+            updateBankDisplay();
         }
 
-    }
-
-    function setTextSize(
-        size,
-        notify = true
-    ) {
-
-        textSize =
-            size;
-
-        localStorage.setItem(
-            'phone_textSize',
-            size
-        );
-
-        document.getElementById(
-            'check-size-petit'
-        ).style.display =
-            size === 'Petit'
-                ? 'block'
-                : 'none';
-
-        document.getElementById(
-            'check-size-normal'
-        ).style.display =
-            size === 'Normal'
-                ? 'block'
-                : 'none';
-
-        document.getElementById(
-            'check-size-grand'
-        ).style.display =
-            size === 'Grand'
-                ? 'block'
-                : 'none';
-
-        document.getElementById(
-            'lbl-textsize'
-        ).innerText =
-            size;
-
-        if (notify) {
-
-            showNotification(
-                `Taille du texte : ${size}`
-            );
-
+        function depositMoney() {
+            const amount = Number(prompt("Montant à déposer :"));
+            if (!Number.isFinite(amount) || amount <= 0) return;
+            if (amount > cashBalance) {
+                showNotification("Tu n'as pas assez d'argent comptant.");
+                return;
+            }
+            cashBalance -= amount;
+            bankBalance += amount;
+            saveBalances();
+            showNotification("Dépôt effectué !");
         }
 
-    }
-
-    function toggleBoldText(
-        isBold
-    ) {
-
-        document.getElementById(
-            'phone-screen'
-        ).style.fontWeight =
-            isBold
-                ? '700'
-                : 'normal';
-
-    }
-
-    function setWallpaper(
-        name,
-        background,
-        notify = true
-    ) {
-
-        wallpaperName =
-            name;
-
-        wallpaperBg =
-            background;
-
-        localStorage.setItem(
-            'phone_wpName',
-            name
-        );
-
-        localStorage.setItem(
-            'phone_wpBg',
-            background
-        );
-
-        document.getElementById(
-            'phone-screen'
-        ).style.background =
-            background;
-
-        document.getElementById(
-            'lbl-wallpaper'
-        ).innerText =
-            name;
-
-        document
-            .querySelectorAll(
-                '.wallpaper-card'
-            )
-            .forEach(
-                card =>
-                    card.classList.remove(
-                        'selected'
-                    )
-            );
-
-        const selectedCard =
-            document.getElementById(
-                `wp-${name}`
-            );
-
-        if (selectedCard) {
-
-            selectedCard.classList.add(
-                'selected'
-            );
-
+        function withdrawMoney() {
+            const amount = Number(prompt("Montant à retirer :"));
+            if (!Number.isFinite(amount) || amount <= 0) return;
+            if (amount > bankBalance) {
+                showNotification("Solde bancaire insuffisant.");
+                return;
+            }
+            bankBalance -= amount;
+            cashBalance += amount;
+            saveBalances();
+            showNotification("Retrait effectué !");
         }
 
-        if (notify) {
+        function transferMoney() {
+            const cardNumber = prompt("Numéro de carte du destinataire :");
+            if (!cardNumber) return;
 
-            showNotification(
-                `Fond d'écran : ${name}`
-            );
+            const amount = Number(prompt("Montant du virement :"));
+            if (!Number.isFinite(amount) || amount <= 0) return;
+            if (amount > bankBalance) {
+                showNotification("Solde bancaire insuffisant.");
+                return;
+            }
 
+            bankBalance -= amount;
+            saveBalances();
+            showNotification(`Virement RP de ${amount}$ envoyé à ${cardNumber}.`);
         }
 
-    }
+        function claimSalary() {
+            const today = new Date().toISOString().slice(0,10);
+            if (localStorage.getItem("salary_last_claim") === today) {
+                showNotification("Tu as déjà reçu ton salaire aujourd'hui.");
+                return;
+            }
 
-</script>
+            bankBalance += 250;
+            localStorage.setItem("salary_last_claim", today);
+            saveBalances();
+            showNotification("Salaire de 250 $ reçu !");
+        }
 
+        async function copyBankCode() {
+            const code = document.getElementById("bank-acc-code").innerText;
+            try {
+                await navigator.clipboard.writeText(code);
+                showNotification("Code copié !");
+            } catch {
+                showNotification("Copie non disponible dans ce navigateur.");
+            }
+        }
+    </script>
 </body>
 </html>

@@ -836,8 +836,15 @@
         .phone-share-panel.visible { display:block; }
         .phone-share-grid { display:grid; grid-template-columns:1fr; gap:8px; width:100%; }
         .phone-share-tile { min-width:0; padding:6px; border:1px solid #ffffff25; border-radius:12px; background:#020617aa; }
-        .phone-share-tile video { display:block; width:100%; max-height:165px; object-fit:contain; background:#020617; border-radius:8px; }
+        .phone-share-tile video { display:block; width:100%; max-height:165px; object-fit:contain; background:#020617; border-radius:8px; cursor:zoom-in; }
         .phone-share-tile span { display:block; padding:5px 2px 1px; color:#e2e8f0; font-size:.68rem; overflow-wrap:anywhere; }
+        .phone-share-fullscreen-btn { display:block; width:100%; margin-top:6px; padding:7px 9px; border:0; border-radius:8px; background:#334155; color:#fff; font-size:.72rem; cursor:pointer; }
+        .phone-share-fullscreen-viewer { position:fixed; inset:0; z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:16px; background:#020617; color:#fff; }
+        .phone-share-fullscreen-viewer:fullscreen { width:100vw; height:100vh; }
+        .phone-share-fullscreen-viewer video { width:100%; height:calc(100% - 56px); object-fit:contain; background:#000; }
+        .phone-share-fullscreen-top { display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; }
+        .phone-share-fullscreen-top span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.9rem; }
+        .phone-share-fullscreen-top button { flex-shrink:0; border:0; border-radius:10px; padding:10px 13px; background:#dc2626; color:#fff; cursor:pointer; }
         .phone-share-button { border:0; border-radius:999px; padding:10px 12px; background:#2563eb; color:#fff; font-size:.75rem; cursor:pointer; }
         .phone-share-button.is-sharing { background:#d97706; }
         .phone-call-overlay .call-overlay-actions { gap:18px; flex-wrap:wrap; justify-content:center; }
@@ -2199,7 +2206,13 @@
                 video.setAttribute('aria-label', 'Partage d’écran de ' + (name || number));
                 const label = document.createElement('span');
                 label.textContent = (name || number || 'Participant') + ' — partage d’écran';
-                tile.append(video, label);
+                const fullscreenButton = document.createElement('button');
+                fullscreenButton.type = 'button';
+                fullscreenButton.className = 'phone-share-fullscreen-btn';
+                fullscreenButton.innerHTML = '<i class="fa-solid fa-expand"></i> Plein écran';
+                fullscreenButton.addEventListener('click', () => phoneOpenScreenFullscreen(video, label.textContent));
+                video.addEventListener('click', () => phoneOpenScreenFullscreen(video, label.textContent));
+                tile.append(video, label, fullscreenButton);
                 grid.appendChild(tile);
                 const track = stream.getVideoTracks()[0];
                 if (track) track.addEventListener('ended', () => {
@@ -2212,6 +2225,62 @@
             panel.classList.add('visible');
             if (video) video.play().catch(() => showNotification('Clique sur l’écran pour afficher le partage.'));
         }
+
+
+        async function phoneOpenScreenFullscreen(sourceVideo, titleText) {
+            if (!sourceVideo || !sourceVideo.srcObject) {
+                showNotification('Le partage d’écran n’est pas encore prêt.');
+                return;
+            }
+            const existing = document.getElementById('phone-share-fullscreen-viewer');
+            if (existing) existing.remove();
+            const viewer = document.createElement('div');
+            viewer.id = 'phone-share-fullscreen-viewer';
+            viewer.className = 'phone-share-fullscreen-viewer';
+            const top = document.createElement('div');
+            top.className = 'phone-share-fullscreen-top';
+            const title = document.createElement('span');
+            title.textContent = titleText || 'Partage d’écran';
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.innerHTML = '<i class="fa-solid fa-compress"></i> Quitter le plein écran';
+            close.addEventListener('click', () => phoneCloseScreenFullscreen());
+            const video = document.createElement('video');
+            video.autoplay = true;
+            video.playsInline = true;
+            video.controls = false;
+            video.muted = true;
+            video.srcObject = sourceVideo.srcObject;
+            top.append(title, close);
+            viewer.append(top, video);
+            document.body.appendChild(viewer);
+            try { await video.play(); } catch (error) { console.warn('Lecture du partage en plein écran impossible', error); }
+            if (viewer.requestFullscreen) {
+                try { await viewer.requestFullscreen(); }
+                catch (error) { /* Le lecteur reste en plein écran visuel si l’API est bloquée. */ }
+            }
+        }
+
+        async function phoneCloseScreenFullscreen() {
+            const viewer = document.getElementById('phone-share-fullscreen-viewer');
+            if (document.fullscreenElement && document.exitFullscreen) {
+                try { await document.exitFullscreen(); } catch (error) { console.warn('Sortie du plein écran impossible', error); }
+            }
+            if (viewer) {
+                const video = viewer.querySelector('video');
+                if (video) { video.pause(); video.srcObject = null; }
+                viewer.remove();
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const viewer = document.getElementById('phone-share-fullscreen-viewer');
+            if (viewer && !document.fullscreenElement) {
+                // On conserve le lecteur en mode plein écran visuel; le bouton permet de le fermer.
+                viewer.style.position = 'fixed';
+                viewer.style.inset = '0';
+            }
+        });
 
         function phoneShowLocalScreen(stream) {
             phoneShowRemoteScreen(stream, getOrGeneratePhoneNumber(), (userName || 'Moi') + ' (toi)');

@@ -1,11 +1,22 @@
-
 /**
- * Blainville RP QC — site, API Discord et appels audio de groupe.
+ * Blainville RP QC
+ * Serveur Express, connexion Discord OAuth2, données du téléphone
+ * et signalisation des appels individuels/de groupe.
+ *
  * Node.js 18+
  * Démarrage : npm start
  *
- * Variables d'environnement :
- * DISCORD_TOKEN, GUILD_ID et PORT (fourni par Canner).
+ * Variables requises pour la connexion Discord :
+ * DISCORD_CLIENT_ID
+ * DISCORD_CLIENT_SECRET
+ * DISCORD_REDIRECT_URI
+ * SESSION_SECRET
+ *
+ * Variables facultatives :
+ * DISCORD_TOKEN
+ * GUILD_ID
+ * DATA_DIR
+ * PORT
  */
 
 'use strict';
@@ -16,20 +27,354 @@ const path = require('path');
 const http = require('http');
 const express = require('express');
 const cors = require('cors');
+const session = require('express-session');
+const crypto = require('crypto');
+const fs = require('fs');
 const WebSocket = require('ws');
 const { Client, GatewayIntentBits } = require('discord.js');
 
 const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
 
-app.use(cors());
-app.use(express.json({ limit: '32kb' }));
+const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
+const accountDataFile = path.join(dataDir, 'discord-phone-data.json');
+
+app.set('trust proxy', 1);
+
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
+
+app.use(express.json({ limit: '256kb' }));
+
+app.use(session({
+    name: 'blainville.sid',
+    secret: process.env.SESSION_SECRET ||
+        'CHANGE-ME-TO-A-LONG-RANDOM-SECRET-BEFORE-DEPLOYING',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    }
+}));
+
 app.use(express.static(__dirname));
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'roleplay.html'));
 });
 
+// ======================================================
+// CONNEXION DISCORD OAUTH2
+// ======================================================
+
+const DISCORD_API = 'https://discord.com/api/v10';
+
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+
+// ======================================================
+// SAUVEGARDE DES DONNÉES PAR COMPTE DISCORD
+// ======================================================
+
+function getAccountData() {
+    try {
+        if (!fs.existsSync(accountDataFile)) {
+            return {};
+        }
+
+        const parsed = JSON.parse(
+            fs.readFileSync(accountDataFile, 'utf8')
+        );
+
+        return parsed && typeof parsed === 'object'
+            ? parsed
+            : {};
+    } catch (error) {
+        console.error(
+            'Lecture des données impossible :',
+            error.message
+        );
+
+        return {};
+    }
+}
+
+function saveAccountData(data) {
+    fs.mkdirSync(dataDir, { recursive: true });
+
+    const temporaryFile = `${accountDataFile}.tmp`;
+
+    fs.writeFileSync(
+        temporaryFile,
+        JSON.stringify(data, null, 2),
+        'utf8'
+    );
+
+    fs.renameSync(temporaryFile, accountDataFile);
+}
+
+function requireDiscordLogin(req, res, next) {
+    if (
+        req.session &&
+        req.session.discordUser &&
+        req.session.discordUser.id
+    ) {
+        return next();
+    }
+
+    return res.status(401).json({
+        error: 'Connexion Discord requise.'
+    });
+}
+
+// Démarrer la connexion Discord.
+app.get('/auth/discord', (req, res) => {
+    if (
+        !DISCORD_CLIENT_ID ||
+        !DISCORD_CLIENT_SECRET ||
+        !DISCORD_REDIRECT_URI
+    ) {
+        return res.status(500).send(
+            'Connexion Discord non configurée. Vérifie ' +
+            'DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET et ' +
+            'DISCORD_REDIRECT_URI dans les variables Canner.'
+        );
+    }
+
+    const state = crypto.randomBytes(24).toString('hex');
+
+    req.session.discordOAuthState = state;
+
+    req.session.save(error => {
+        if (error) {
+            console.error(
+                'Erreur de session avant OAuth :',
+                error
+            );
+
+            return res.status(500).send(
+                'Impossible de démarrer la connexion Discord.'
+            );
+        }
+
+        const params = new URLSearchParams({
+            client_id: DISCORD_CLIENT_ID,
+            redirect_uri: DISCORD_REDIRECT_URI,
+            response_type: 'code',
+            scope: 'identify',
+            state
+        });
+
+        return res.redirect(
+            `https://discord.com/oauth2/authorize?${params.toString()}`
+        );
+    });
+});
+
+// Retour de Discord après autorisation.
+app.get('/auth/discord/callback', async (req, res) => {
+    const { code, state, error } = req.query;
+
+    if (error) {
+        return res.status(400).send(
+            'Connexion Discord annulée ou refusée. Retourne au site et réessaie.'
+        );
+    }
+
+    if (
+        !code ||
+        !state ||
+        !req.session.discordOAuthState ||
+        state !== req.session.discordOAuthState
+    ) {
+        return res.status(400).send(
+            'État OAuth invalide ou expiré. Retourne au site et réessaie.'
+        );
+    }
+
+    delete req.session.discordOAuthState;
+
+    try {
+        // Échanger le code OAuth contre un jeton d'accès.
+        const tokenResponse = await fetch(
+            `${DISCORD_API}/oauth2/token`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    client_id: DISCORD_CLIENT_ID || '',
+                    client_secret: DISCORD_CLIENT_SECRET || '',
+                    grant_type: 'authorization_code',
+                    code: String(code),
+                    redirect_uri: DISCORD_REDIRECT_URI || ''
+                })
+            }
+        );
+
+        const tokenData = await tokenResponse.json();
+
+        if (!tokenResponse.ok || !tokenData.access_token) {
+            console.error(
+                'Échange OAuth Discord refusé :',
+                tokenData.error || tokenResponse.status
+            );
+
+            return res.status(502).send(
+                'Discord a refusé la connexion. Vérifie les variables ' +
+                'et l’URI de redirection.'
+            );
+        }
+
+        // Récupérer le compte Discord connecté.
+        const userResponse = await fetch(
+            `${DISCORD_API}/users/@me`,
+            {
+                headers: {
+                    Authorization: `Bearer ${tokenData.access_token}`
+                }
+            }
+        );
+
+        const user = await userResponse.json();
+
+        if (!userResponse.ok || !user.id) {
+            return res.status(502).send(
+                'Impossible de récupérer le compte Discord. Réessaie.'
+            );
+        }
+
+        // Ne conserver que les informations publiques nécessaires.
+        req.session.discordUser = {
+            id: String(user.id),
+            username: String(
+                user.global_name || user.username || 'Joueur RP'
+            ),
+            avatar: user.avatar
+                ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
+                : null
+        };
+
+        req.session.save(saveError => {
+            if (saveError) {
+                console.error(
+                    'Enregistrement de session impossible :',
+                    saveError
+                );
+
+                return res.status(500).send(
+                    'Connexion réussie, mais la session n’a pas pu être enregistrée. Réessaie.'
+                );
+            }
+
+            return res.redirect('/');
+        });
+    } catch (err) {
+        console.error('Erreur callback Discord :', err);
+
+        return res.status(500).send(
+            'Erreur pendant la connexion Discord. Consulte les journaux du serveur.'
+        );
+    }
+});
+
+// Déconnexion du site.
+app.get('/auth/logout', (req, res) => {
+    req.session.destroy(error => {
+        if (error) {
+            console.error('Erreur de déconnexion :', error);
+        }
+
+        res.clearCookie('blainville.sid');
+        res.redirect('/');
+    });
+});
+
+// Informations sur le compte actuellement connecté.
+app.get('/api/me', (req, res) => {
+    if (!req.session.discordUser) {
+        return res.status(401).json({
+            authenticated: false
+        });
+    }
+
+    return res.json({
+        authenticated: true,
+        user: req.session.discordUser
+    });
+});
+
+// Lire les données du téléphone du compte connecté.
+app.get('/api/phone-data', requireDiscordLogin, (req, res) => {
+    const allData = getAccountData();
+
+    const userData =
+        allData[req.session.discordUser.id] || {};
+
+    return res.json({
+        data: userData
+    });
+});
+
+// Sauvegarder les données du téléphone du compte connecté.
+app.put('/api/phone-data', requireDiscordLogin, (req, res) => {
+    if (
+        !req.body ||
+        !req.body.data ||
+        typeof req.body.data !== 'object' ||
+        Array.isArray(req.body.data)
+    ) {
+        return res.status(400).json({
+            error: 'Format des données invalide.'
+        });
+    }
+
+    if (
+        Buffer.byteLength(
+            JSON.stringify(req.body.data),
+            'utf8'
+        ) > 200 * 1024
+    ) {
+        return res.status(413).json({
+            error: 'Les données du téléphone sont trop volumineuses.'
+        });
+    }
+
+    try {
+        const allData = getAccountData();
+
+        allData[req.session.discordUser.id] = req.body.data;
+
+        saveAccountData(allData);
+
+        return res.json({
+            ok: true
+        });
+    } catch (error) {
+        console.error(
+            'Sauvegarde des données impossible :',
+            error
+        );
+
+        return res.status(500).json({
+            error: 'Impossible de sauvegarder les données du téléphone.'
+        });
+    }
+});
+
+// ======================================================
+// SERVEUR HTTP ET WEBSOCKET
+// ======================================================
+
 const server = http.createServer(app);
+
 const wss = new WebSocket.Server({
     server,
     maxPayload: 1024 * 1024
@@ -42,7 +387,7 @@ const discord = new Client({
     ]
 });
 
-// Numéro RP -> connexion active.
+// Numéro RP -> connexion WebSocket active.
 const clientsByNumber = new Map();
 
 // ID du groupe -> membres connectés.
@@ -55,17 +400,19 @@ function send(socket, payload) {
 }
 
 function validPhoneNumber(value) {
-    return typeof value === 'string'
-        && /^555-\d{3}-\d{4}$/.test(value);
+    return typeof value === 'string' &&
+        /^555-\d{3}-\d{4}$/.test(value);
 }
 
 function validGroupId(value) {
-    return typeof value === 'string'
-        && /^grp-[a-z0-9-]{1,80}$/i.test(value);
+    return typeof value === 'string' &&
+        /^grp-[a-z0-9-]{1,80}$/i.test(value);
 }
 
 function safeName(value) {
-    if (typeof value !== 'string') return 'Joueur RP';
+    if (typeof value !== 'string') {
+        return 'Joueur RP';
+    }
 
     const name = value
         .trim()
@@ -85,12 +432,15 @@ function getGroupMembers(room) {
 function removeFromGroup(socket, groupId, notify = true) {
     const room = groupRooms.get(groupId);
 
-    if (!room || !socket.phoneNumber) return;
+    if (!room || !socket.phoneNumber) {
+        return;
+    }
 
     const current = room.get(socket.phoneNumber);
 
-    // Ne pas supprimer une nouvelle session du même numéro.
-    if (!current || current.socket !== socket) return;
+    if (!current || current.socket !== socket) {
+        return;
+    }
 
     room.delete(socket.phoneNumber);
 
@@ -118,7 +468,7 @@ app.get('/health', (req, res) => {
     });
 });
 
-// API Discord : nombre de membres humains.
+// Nombre de membres humains du serveur Discord.
 app.get('/api/members', async (req, res) => {
     try {
         if (!process.env.GUILD_ID) {
@@ -139,12 +489,11 @@ app.get('/api/members', async (req, res) => {
 
         await guild.members.fetch();
 
-        const count = guild.members.cache
-            .filter(member => !member.user.bot)
-            .size;
+        const count = guild.members.cache.filter(
+            member => !member.user.bot
+        ).size;
 
         return res.json({ count });
-
     } catch (error) {
         console.error('Erreur Discord API :', error);
 
@@ -154,7 +503,10 @@ app.get('/api/members', async (req, res) => {
     }
 });
 
-// WebSocket : appels individuels et de groupe.
+// ======================================================
+// GESTION DES APPELS
+// ======================================================
+
 wss.on('connection', socket => {
     socket.phoneNumber = null;
     socket.phoneName = 'Joueur RP';
@@ -195,7 +547,6 @@ wss.on('connection', socket => {
             const previous = clientsByNumber.get(message.number);
 
             if (previous && previous !== socket) {
-                // Retirer l'ancienne session de ses groupes.
                 for (const groupId of [...groupRooms.keys()]) {
                     removeFromGroup(previous, groupId);
                 }
@@ -229,7 +580,7 @@ wss.on('connection', socket => {
             return;
         }
 
-        // Tous les messages suivants exigent un téléphone enregistré.
+        // Les autres actions nécessitent un téléphone enregistré.
         if (
             !socket.phoneNumber ||
             clientsByNumber.get(socket.phoneNumber) !== socket
@@ -241,7 +592,7 @@ wss.on('connection', socket => {
             return;
         }
 
-        // Rejoindre une salle d'appel de groupe.
+        // Rejoindre un appel de groupe.
         if (message.type === 'group-join') {
             if (!validGroupId(message.groupId)) {
                 send(socket, {
@@ -252,7 +603,6 @@ wss.on('connection', socket => {
             }
 
             const groupId = message.groupId;
-
             let room = groupRooms.get(groupId);
 
             if (!room) {
@@ -260,15 +610,11 @@ wss.on('connection', socket => {
                 groupRooms.set(groupId, room);
             }
 
-            const existingMembers = getGroupMembers(room)
-                .filter(member => member.number !== socket.phoneNumber);
-
             room.set(socket.phoneNumber, {
                 socket,
                 name: socket.phoneName
             });
 
-            // Envoyer la liste des participants au nouveau membre.
             send(socket, {
                 type: 'group-members',
                 groupId,
@@ -276,7 +622,6 @@ wss.on('connection', socket => {
                 members: getGroupMembers(room)
             });
 
-            // Informer les autres membres de son arrivée.
             for (const member of room.values()) {
                 if (member.socket !== socket) {
                     send(member.socket, {
@@ -289,7 +634,7 @@ wss.on('connection', socket => {
             }
 
             console.log(
-                `[Téléphone] ${socket.phoneNumber} rejoint ${groupId} (${existingMembers.length + 1} membre(s))`
+                `[Téléphone] ${socket.phoneNumber} rejoint ${groupId}`
             );
 
             return;
@@ -303,7 +648,7 @@ wss.on('connection', socket => {
             return;
         }
 
-        // Inviter un contact dans un appel de groupe.
+        // Inviter un joueur dans un appel de groupe.
         if (message.type === 'group-invite') {
             const target = typeof message.target === 'string'
                 ? message.target
@@ -361,13 +706,15 @@ wss.on('connection', socket => {
             return;
         }
 
-        // Refus d'une invitation à un groupe.
+        // Refuser une invitation de groupe.
         if (message.type === 'group-invite-reject') {
             const target = typeof message.target === 'string'
                 ? message.target
                 : '';
 
-            if (!validPhoneNumber(target)) return;
+            if (!validPhoneNumber(target)) {
+                return;
+            }
 
             const recipient = clientsByNumber.get(target);
 
@@ -389,7 +736,7 @@ wss.on('connection', socket => {
             return;
         }
 
-        // Messages de signalisation WebRTC.
+        // Signalisation WebRTC pour les appels.
         const allowedTypes = new Set([
             'call-offer',
             'call-answer',
@@ -422,7 +769,6 @@ wss.on('connection', socket => {
             return;
         }
 
-        // En groupe, les deux participants doivent avoir rejoint la salle.
         const groupId = message.groupId || '';
 
         if (groupId) {
@@ -466,7 +812,9 @@ wss.on('connection', socket => {
             target
         };
 
-        if (groupId) forwarded.groupId = groupId;
+        if (groupId) {
+            forwarded.groupId = groupId;
+        }
 
         if (message.type === 'call-offer') {
             forwarded.offer = message.offer;
@@ -514,7 +862,10 @@ wss.on('connection', socket => {
     });
 });
 
-// Bot Discord.
+// ======================================================
+// DÉMARRAGE
+// ======================================================
+
 discord.once('ready', () => {
     console.log(`Bot Discord connecté : ${discord.user.tag}`);
 });
@@ -523,19 +874,21 @@ discord.on('error', error => {
     console.error('Erreur Discord :', error);
 });
 
-// Démarrage du serveur sur le port fourni par Canner.
 const PORT = Number(process.env.PORT || 3000);
 
 const httpServer = server.listen(PORT, () => {
     console.log(`Blainville RP QC écoute sur le port ${PORT}`);
+    console.log('Connexion Discord : /auth/discord');
+    console.log('API compte : /api/me');
+    console.log('API téléphone : /api/phone-data');
     console.log('API membres : /api/members');
     console.log('Vérification serveur : /health');
 });
 
-// Connexion du bot Discord.
 if (!process.env.DISCORD_TOKEN) {
-    console.error(
-        'DISCORD_TOKEN manquant dans les variables d’environnement.'
+    console.warn(
+        'DISCORD_TOKEN absent : le bot Discord ne sera pas connecté. ' +
+        'La connexion OAuth peut tout de même fonctionner.'
     );
 } else {
     discord.login(process.env.DISCORD_TOKEN).catch(error => {

@@ -977,7 +977,7 @@
                                 <div class="settings-icon" style="background:#22c55e;"><i class="fa-solid fa-phone"></i></div>
                                 <span>Mon numéro</span>
                             </div>
-                            <span style="color:var(--text-muted); font-size:0.8rem;"><span id="account-phone-display">555-000-0000</span> <i class="fa-regular fa-copy"></i></span>
+                            <span style="color:var(--text-muted); font-size:0.8rem; display:flex;align-items:center;gap:7px;"><span id="account-phone-display">555-000-0000</span><button type="button" class="bank-action-btn" style="padding:5px 7px;font-size:.65rem;" onclick="copyText(getOrGeneratePhoneNumber(), 'Numéro de téléphone copié !')" aria-label="Copier mon numéro de téléphone"><i class="fa-regular fa-copy"></i> Copier</button></span>
                         </div>
                     </div>
 
@@ -1209,7 +1209,7 @@
                             <span class="bank-card-title">BNB Card</span>
                             <div class="bank-card-chip"></div>
                         </div>
-                        <div class="bank-card-num">•••• •••• •••• 7749</div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><div class="bank-card-num">•••• •••• •••• 7749</div><button type="button" class="bank-action-btn" style="padding:5px 7px;font-size:.65rem;" onclick="copyText('7015 4813 7877 7749', 'Numéro de carte copié !')" aria-label="Copier le numéro de carte"><i class="fa-regular fa-copy"></i> Copier</button></div>
                         <div class="bank-card-bottom">
                             <div>
                                 <div style="font-size:0.55rem; color:#94a3b8;">TITULAIRE</div>
@@ -1265,7 +1265,7 @@
                                 <div style="font-size:0.6rem; color:var(--text-muted);">NUMÉRO DE CARTE</div>
                                 <span id="modal-card-num" style="font-size:0.8rem; font-weight:600;">•••• •••• •••• 7749</span>
                             </div>
-                            <i class="fa-regular fa-eye" style="cursor:pointer;" onclick="toggleSecret('modal-card-num', '7015 4813 7877 7749')"></i>
+                            <div style="display:flex;align-items:center;gap:8px;"><button type="button" class="bank-action-btn" style="padding:5px 8px;font-size:.65rem;" onclick="copyText('7015 4813 7877 7749', 'Numéro de carte copié !')"><i class="fa-regular fa-copy"></i> Copier</button><i class="fa-regular fa-eye" title="Afficher/masquer" style="cursor:pointer;" onclick="toggleSecret('modal-card-num', '7015 4813 7877 7749')"></i></div>
                         </div>
 
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
@@ -1274,14 +1274,14 @@
                                     <div style="font-size:0.6rem; color:var(--text-muted);">EXPIRE</div>
                                     <span id="modal-card-exp" style="font-size:0.8rem; font-weight:600;">••/••</span>
                                 </div>
-                                <i class="fa-regular fa-eye" style="cursor:pointer;" onclick="toggleSecret('modal-card-exp', '03/34')"></i>
+                                <div style="display:flex;align-items:center;gap:7px;"><button type="button" class="bank-action-btn" style="padding:5px 7px;font-size:.65rem;" onclick="copyText('03/34', 'Date d’expiration copiée !')" aria-label="Copier la date d’expiration"><i class="fa-regular fa-copy"></i></button><i class="fa-regular fa-eye" title="Afficher/masquer" style="cursor:pointer;" onclick="toggleSecret('modal-card-exp', '03/34')"></i></div>
                             </div>
                             <div class="modal-item">
                                 <div>
                                     <div style="font-size:0.6rem; color:var(--text-muted);">CVV</div>
                                     <span id="modal-card-cvv" style="font-size:0.8rem; font-weight:600;">•••</span>
                                 </div>
-                                <i class="fa-regular fa-eye" style="cursor:pointer;" onclick="toggleSecret('modal-card-cvv', '842')"></i>
+                                <div style="display:flex;align-items:center;gap:7px;"><button type="button" class="bank-action-btn" style="padding:5px 7px;font-size:.65rem;" onclick="copyText('842', 'CVV copié !')" aria-label="Copier le CVV"><i class="fa-regular fa-copy"></i></button><i class="fa-regular fa-eye" title="Afficher/masquer" style="cursor:pointer;" onclick="toggleSecret('modal-card-cvv', '842')"></i></div>
                             </div>
                         </div>
 
@@ -1297,7 +1297,7 @@
                         <span style="font-size:.78rem;color:var(--text-muted);font-weight:600;"><i class="fa-solid fa-signal"></i> Appels RP</span>
                     </div>
                     <h2 style="font-size:1.55rem;font-weight:850;margin:0 0 4px;">Téléphone</h2>
-                    <p class="call-muted" style="margin-bottom:12px;">Mon numéro : <strong id="phone-app-my-number" style="color:var(--phone-text);">555-000-0000</strong></p>
+                    <p class="call-muted" style="margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">Mon numéro : <strong id="phone-app-my-number" style="color:var(--phone-text);">555-000-0000</strong><button type="button" class="call-small-btn" onclick="copyText(getOrGeneratePhoneNumber(), 'Numéro de téléphone copié !')" aria-label="Copier mon numéro de téléphone"><i class="fa-regular fa-copy"></i> Copier</button></p>
                     <div id="phone-call-setup-hint" class="call-setup-hint">Connexion au serveur d’appels… Les appels audio nécessitent un serveur en ligne et l’autorisation du micro.</div>
                     <div class="call-panel">
                         <div id="phone-call-status" class="call-status">Prêt à appeler</div>
@@ -1550,10 +1550,45 @@
             }
         }
 
+        // Copie compatible avec HTTPS, localhost et les navigateurs qui bloquent Clipboard API.
+        async function copyText(value, successMessage = 'Copié dans le presse-papiers !') {
+            const textToCopy = String(value ?? '').trim();
+            if (!textToCopy) {
+                showNotification('Il n’y a rien à copier.');
+                return false;
+            }
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(textToCopy);
+                } else {
+                    const helper = document.createElement('textarea');
+                    helper.value = textToCopy;
+                    helper.setAttribute('readonly', '');
+                    helper.style.position = 'fixed';
+                    helper.style.top = '0';
+                    helper.style.left = '-9999px';
+                    helper.style.opacity = '0';
+                    document.body.appendChild(helper);
+                    helper.focus();
+                    helper.select();
+                    helper.setSelectionRange(0, helper.value.length);
+                    const copied = document.execCommand('copy');
+                    helper.remove();
+                    if (!copied) throw new Error('La copie a été refusée par le navigateur.');
+                }
+                showNotification(successMessage);
+                return true;
+            } catch (error) {
+                console.warn('Copie impossible :', error);
+                // Dernier recours : affiche la valeur pour permettre une copie manuelle.
+                showNotification('Copie bloquée par le navigateur. Réessaie sur le site HTTPS.');
+                return false;
+            }
+        }
+
         function copyBankCode() {
-            const code = document.getElementById('bank-acc-code').innerText;
-            navigator.clipboard.writeText(code);
-            showNotification("Code copié dans le presse-papier !");
+            const code = document.getElementById('bank-acc-code')?.textContent || '';
+            copyText(code, 'Code bancaire copié !');
         }
 
         function applySavedSettings() {

@@ -858,6 +858,15 @@
         .call-group-option small { color:var(--text-muted); font-size:.68rem; }
         #phone-tab-groups { min-width:0; }
 
+    
+        .discord-auth-gate { width:min(520px, calc(100% - 28px)); margin:22px auto; padding:28px 22px; border:1px solid rgba(148,163,184,.25); border-radius:22px; background:linear-gradient(145deg,#111827,#1e293b); color:#f8fafc; text-align:center; box-shadow:0 20px 55px rgba(0,0,0,.22); }
+        .discord-auth-gate h2 { margin:0 0 10px; font-size:1.45rem; }
+        .discord-auth-gate p { color:#cbd5e1; line-height:1.55; margin:0 0 18px; }
+        .discord-login-button { display:inline-flex; align-items:center; justify-content:center; gap:10px; border:0; border-radius:12px; background:#5865f2; color:#fff; text-decoration:none; font-weight:700; padding:13px 18px; cursor:pointer; }
+        .discord-auth-note { margin-top:14px!important; font-size:.78rem; color:#94a3b8!important; }
+        .account-chip { display:none; margin:0 auto 14px; width:fit-content; padding:7px 11px; border-radius:999px; background:rgba(88,101,242,.13); color:#c7d2fe; font-size:.8rem; align-items:center; gap:10px; }
+        .account-chip button { border:0; border-radius:8px; background:rgba(239,68,68,.16); color:#fecaca; padding:5px 8px; cursor:pointer; font-size:.72rem; }
+
     </style>
 </head>
 <body>
@@ -886,7 +895,16 @@
             <p>Interface système BlainOS pour Blainville RP QC.</p>
         </div>
 
-        <div class="phone-wrapper">
+        <section id="discord-auth-gate" class="discord-auth-gate" style="display:none;">
+            <div style="font-size:2.6rem;margin-bottom:10px;color:#a5b4fc;"><i class="fa-brands fa-discord"></i></div>
+            <h2>Connexion Discord requise</h2>
+            <p>Connecte-toi avec ton compte Discord pour accéder au téléphone RP. Tes réglages, contacts et données bancaires RP seront enregistrés sur le serveur pour ton compte Discord, pas dans le stockage de ton navigateur.</p>
+            <a id="discord-login-link" class="discord-login-button" href="/auth/discord"><i class="fa-brands fa-discord"></i> Se connecter avec Discord</a>
+            <p class="discord-auth-note">Nous utilisons uniquement ton identifiant et ton nom Discord pour associer tes données au bon compte. Ton mot de passe Discord n’est jamais partagé avec ce site.</p>
+            <div id="discord-auth-error" style="display:none;color:#fca5a5;font-size:.85rem;margin-top:12px;"></div>
+        </section>
+        <div id="discord-account-chip" class="account-chip"></div>
+        <div class="phone-wrapper" id="phone-wrapper" style="display:none;">
             <div class="phone-notch"></div>
             
             <div class="phone-screen" id="phone-screen">
@@ -1404,36 +1422,114 @@
     </footer>
 
     <script>
-        // Numéro unique par navigateur
+        // Les données du téléphone viennent de l'API authentifiée et sont liées à l'identifiant Discord.
+        // Le chargement initial synchrone évite que les paramètres par défaut écrasent les données du compte.
+        const phoneAccountBootstrap = (() => {
+            const result = { authenticated: false, user: null, data: {} };
+            try {
+                const meRequest = new XMLHttpRequest();
+                meRequest.open('GET', '/api/me', false);
+                meRequest.withCredentials = true;
+                meRequest.send(null);
+                if (meRequest.status !== 200) return result;
+                const me = JSON.parse(meRequest.responseText);
+                result.authenticated = true;
+                result.user = me.user || null;
+                const dataRequest = new XMLHttpRequest();
+                dataRequest.open('GET', '/api/phone-data', false);
+                dataRequest.withCredentials = true;
+                dataRequest.send(null);
+                if (dataRequest.status === 200) result.data = JSON.parse(dataRequest.responseText).data || {};
+            } catch (error) { console.error('Chargement du compte Discord impossible :', error); }
+            return result;
+        })();
+        const phoneStorage = (() => {
+            const data = { ...(phoneAccountBootstrap.data || {}) };
+            let saveQueue = Promise.resolve();
+            return {
+                getItem(key) { return Object.prototype.hasOwnProperty.call(data, key) ? String(data[key]) : null; },
+                setItem(key, value) {
+                    data[key] = String(value);
+                    if (!phoneAccountBootstrap.authenticated) return;
+                    const snapshot = { ...data };
+                    saveQueue = saveQueue.then(() => fetch('/api/phone-data', {
+                        method: 'PUT', credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ data: snapshot })
+                    })).then(response => {
+                        if (response.status === 401) window.location.href = '/auth/discord';
+                        if (!response.ok) throw new Error('Sauvegarde serveur refusée');
+                    }).catch(error => console.error('Erreur de sauvegarde du téléphone :', error));
+                },
+                removeItem(key) {
+                    delete data[key];
+                    if (phoneAccountBootstrap.authenticated) {
+                        const snapshot = { ...data };
+                        saveQueue = saveQueue.then(() => fetch('/api/phone-data', { method:'PUT', credentials:'same-origin', headers:{'Content-Type':'application/json'}, body:JSON.stringify({data:snapshot}) })).catch(error => console.error(error));
+                    }
+                }
+            };
+        })();
+        document.addEventListener('DOMContentLoaded', () => {
+            const gate = document.getElementById('discord-auth-gate');
+            const phone = document.getElementById('phone-wrapper');
+            const chip = document.getElementById('discord-account-chip');
+            if (phoneAccountBootstrap.authenticated) {
+                phone.style.display = '';
+                gate.style.display = 'none';
+                if (phoneAccountBootstrap.user) {
+                    const displayName = phoneAccountBootstrap.user.global_name || phoneAccountBootstrap.user.username || 'Joueur RP';
+                    chip.textContent = 'Connecté : ' + displayName;
+                    const logoutButton = document.createElement('button');
+                    logoutButton.type = 'button';
+                    logoutButton.textContent = 'Déconnexion';
+                    logoutButton.onclick = discordLogout;
+                    chip.appendChild(logoutButton);
+                    chip.style.display = 'flex';
+                    if (!phoneStorage.getItem('phone_userName')) phoneStorage.setItem('phone_userName', displayName);
+                }
+            } else {
+                phone.style.display = 'none';
+                gate.style.display = 'block';
+            }
+        });
+
+        async function discordLogout() {
+            try { await fetch('/auth/logout', { method: 'POST', credentials: 'same-origin' }); }
+            finally { window.location.href = '/roleplay.html'; }
+        }
+
+        // Numéro de téléphone unique pour ce compte Discord
         function getOrGeneratePhoneNumber() {
-            let savedPhone = localStorage.getItem('phone_number');
+            let savedPhone = phoneStorage.getItem('phone_number');
             if (!savedPhone) {
                 const prefix = Math.floor(100 + Math.random() * 900);
                 const suffix = Math.floor(1000 + Math.random() * 9000);
                 savedPhone = `555-${prefix}-${suffix}`;
-                localStorage.setItem('phone_number', savedPhone);
+                phoneStorage.setItem('phone_number', savedPhone);
             }
             return savedPhone;
         }
 
         // Configuration Sauvegardée
-        let userName = localStorage.getItem('phone_userName') || 'Nathan';
-        let currentTheme = localStorage.getItem('phone_theme') || 'dark';
-        let textSize = localStorage.getItem('phone_textSize') || 'Normal';
-        let wallpaperName = localStorage.getItem('phone_wpName') || 'Blainville';
-        let wallpaperBg = localStorage.getItem('phone_wpBg') || 'linear-gradient(to bottom, #0f172a, #1e293b)';
-        let lockEnabled = localStorage.getItem('phone_lockEnabled') !== 'false';
-        let currentPin = localStorage.getItem('phone_pin') || '1234';
+        let userName = phoneStorage.getItem('phone_userName') || (phoneAccountBootstrap.user && (phoneAccountBootstrap.user.global_name || phoneAccountBootstrap.user.username)) || 'Joueur RP';
+        let currentTheme = phoneStorage.getItem('phone_theme') || 'dark';
+        let textSize = phoneStorage.getItem('phone_textSize') || 'Normal';
+        let wallpaperName = phoneStorage.getItem('phone_wpName') || 'Blainville';
+        let wallpaperBg = phoneStorage.getItem('phone_wpBg') || 'linear-gradient(to bottom, #0f172a, #1e293b)';
+        let lockEnabled = phoneStorage.getItem('phone_lockEnabled') !== 'false';
+        let currentPin = phoneStorage.getItem('phone_pin') || '1234';
 
         // Le solde bancaire RP commence à 0 $.
-        if (localStorage.getItem('phone_bankBalance') === null) {
-            localStorage.setItem('phone_bankBalance', '0');
+        if (phoneStorage.getItem('phone_bankBalance') === null) {
+            phoneStorage.setItem('phone_bankBalance', '0');
         }
-        let bankBalance = Number(localStorage.getItem('phone_bankBalance')) || 0;
+        let bankBalance = Number(phoneStorage.getItem('phone_bankBalance')) || 0;
 
         let enteredPin = "";
 
         document.addEventListener('DOMContentLoaded', () => {
+            if (!phoneAccountBootstrap.authenticated) return;
             applySavedSettings();
             checkLockScreen();
             phoneRenderContacts();
@@ -1491,7 +1587,7 @@
 
         function toggleLockState(enabled) {
             lockEnabled = enabled;
-            localStorage.setItem('phone_lockEnabled', enabled);
+            phoneStorage.setItem('phone_lockEnabled', enabled);
             document.getElementById('lbl-lock').innerText = enabled ? 'Activé' : 'Désactivé';
             showNotification(enabled ? "Verrouillage activé" : "Verrouillage désactivé");
         }
@@ -1500,7 +1596,7 @@
             const newPin = document.getElementById('new-pin-input').value.trim();
             if (newPin.length === 4 && !isNaN(newPin)) {
                 currentPin = newPin;
-                localStorage.setItem('phone_pin', currentPin);
+                phoneStorage.setItem('phone_pin', currentPin);
                 document.getElementById('new-pin-input').value = "";
                 showNotification("Nouveau code PIN enregistré !");
             } else {
@@ -1516,13 +1612,13 @@
         function updateBankBalances() {
             const bankElement = document.getElementById('bank-balance');
             if (bankElement) bankElement.innerText = formatMoney(bankBalance);
-            localStorage.setItem('phone_bankBalance', String(bankBalance));
+            phoneStorage.setItem('phone_bankBalance', String(bankBalance));
         }
 
         function claimSalary() {
             const today = new Date();
             const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-            const lastSalaryDate = localStorage.getItem('phone_lastSalaryDate');
+            const lastSalaryDate = phoneStorage.getItem('phone_lastSalaryDate');
 
             if (lastSalaryDate === dateKey) {
                 showNotification('Tu as déjà réclamé ton salaire aujourd’hui !');
@@ -1530,7 +1626,7 @@
             }
 
             bankBalance += 250;
-            localStorage.setItem('phone_lastSalaryDate', dateKey);
+            phoneStorage.setItem('phone_lastSalaryDate', dateKey);
             updateBankBalances();
             showNotification('Salaire de 250 $ ajouté à ton compte !');
         }
@@ -1633,7 +1729,7 @@
             const name = document.getElementById('account-name-input').value.trim();
             if (name !== "") {
                 userName = name;
-                localStorage.setItem('phone_userName', userName);
+                phoneStorage.setItem('phone_userName', userName);
                 document.querySelectorAll('.profile-name').forEach(el => el.innerText = userName);
                 showNotification("Profil sauvegardé !");
             }
@@ -1641,7 +1737,7 @@
 
         function setTheme(theme, notify = true) {
             currentTheme = theme;
-            localStorage.setItem('phone_theme', theme);
+            phoneStorage.setItem('phone_theme', theme);
 
             const screen = document.getElementById('phone-screen');
             const checkDark = document.getElementById('check-theme-dark');
@@ -1664,7 +1760,7 @@
 
         function setTextSize(size, notify = true) {
             textSize = size;
-            localStorage.setItem('phone_textSize', size);
+            phoneStorage.setItem('phone_textSize', size);
 
             document.getElementById('check-size-petit').style.display = size === 'Petit' ? 'block' : 'none';
             document.getElementById('check-size-normal').style.display = size === 'Normal' ? 'block' : 'none';
@@ -1681,8 +1777,8 @@
         function setWallpaper(name, background, notify = true) {
             wallpaperName = name;
             wallpaperBg = background;
-            localStorage.setItem('phone_wpName', name);
-            localStorage.setItem('phone_wpBg', background);
+            phoneStorage.setItem('phone_wpName', name);
+            phoneStorage.setItem('phone_wpBg', background);
 
             document.getElementById('phone-screen').style.background = background;
             document.getElementById('lbl-wallpaper').innerText = name;
@@ -1717,9 +1813,9 @@
         let phonePendingGroupInvite = null;
         const phoneGroupPeers = new Map();
         const phoneGroupMembers = new Map();
-        let phoneContacts = JSON.parse(localStorage.getItem('phone_contacts') || '[]');
-        let phoneHistory = JSON.parse(localStorage.getItem('phone_callHistory') || '[]');
-        let phoneGroups = JSON.parse(localStorage.getItem('phone_groups') || '[]');
+        let phoneContacts = JSON.parse(phoneStorage.getItem('phone_contacts') || '[]');
+        let phoneHistory = JSON.parse(phoneStorage.getItem('phone_callHistory') || '[]');
+        let phoneGroups = JSON.parse(phoneStorage.getItem('phone_groups') || '[]');
 
         function phoneSetStatus(message) {
             const el = document.getElementById('phone-call-status');
@@ -2563,7 +2659,7 @@
             if (number === getOrGeneratePhoneNumber()) { showNotification('C’est ton propre numéro.'); return; }
             phoneContacts = phoneContacts.filter(contact => phoneNormalizeNumber(contact.number) !== number);
             phoneContacts.unshift({ name, number });
-            localStorage.setItem('phone_contacts', JSON.stringify(phoneContacts));
+            phoneStorage.setItem('phone_contacts', JSON.stringify(phoneContacts));
             document.getElementById('phone-contact-name').value = '';
             document.getElementById('phone-contact-number').value = '';
             phoneRenderContacts();
@@ -2594,9 +2690,9 @@
 
         function phoneRemoveContact(index) {
             phoneContacts.splice(index, 1);
-            localStorage.setItem('phone_contacts', JSON.stringify(phoneContacts));
+            phoneStorage.setItem('phone_contacts', JSON.stringify(phoneContacts));
             phoneGroups = phoneGroups.map(group => ({ ...group, members: (group.members || []).filter(number => phoneContacts.some(contact => phoneNormalizeNumber(contact.number) === phoneNormalizeNumber(number))) }));
-            localStorage.setItem('phone_groups', JSON.stringify(phoneGroups));
+            phoneStorage.setItem('phone_groups', JSON.stringify(phoneGroups));
             phoneRenderContacts();
             phoneRenderGroupContactOptions();
             phoneRenderGroups();
@@ -2606,7 +2702,7 @@
             if (!number) return;
             phoneHistory.unshift({ number, name: name || number, direction, result, time: new Date().toLocaleString('fr-CA') });
             phoneHistory = phoneHistory.slice(0, 30);
-            localStorage.setItem('phone_callHistory', JSON.stringify(phoneHistory));
+            phoneStorage.setItem('phone_callHistory', JSON.stringify(phoneHistory));
             phoneRenderHistory();
         }
 
@@ -2637,7 +2733,7 @@
             if (!name) { showNotification('Donne un nom au groupe.'); return; }
             if (!selected.length) { showNotification('Sélectionne au moins un contact.'); return; }
             phoneGroups.push({ id: 'saved-' + Date.now().toString(36), name: name.slice(0, 40), members: [...new Set(selected)] });
-            localStorage.setItem('phone_groups', JSON.stringify(phoneGroups));
+            phoneStorage.setItem('phone_groups', JSON.stringify(phoneGroups));
             nameInput.value = '';
             phoneRenderGroupContactOptions();
             phoneRenderGroups();
@@ -2647,7 +2743,7 @@
 
         function phoneDeleteGroup(index) {
             phoneGroups.splice(index, 1);
-            localStorage.setItem('phone_groups', JSON.stringify(phoneGroups));
+            phoneStorage.setItem('phone_groups', JSON.stringify(phoneGroups));
             phoneRenderGroups();
         }
 

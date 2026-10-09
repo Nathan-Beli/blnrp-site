@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+à<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -826,6 +826,21 @@
         .call-control-label { color:#e2e8f0; font-size:.68rem; }
         .phone-call-overlay .round-call-btn:disabled { opacity:.45; cursor:not-allowed; }
         .call-setup-hint { padding:9px 10px; border-radius:10px; background:rgba(234,179,8,.12); color:#fbbf24; font-size:.68rem; line-height:1.4; margin-bottom:10px; }
+        .phone-call-minimize { position:absolute; top:16px; right:16px; z-index:3; border:1px solid #ffffff33; border-radius:999px; padding:8px 11px; background:#ffffff18; color:#fff; cursor:pointer; font-size:.72rem; }
+        .phone-call-mini { position:absolute; z-index:155; left:12px; right:12px; bottom:83px; display:none; align-items:center; gap:8px; padding:10px; border-radius:15px; color:#fff; background:rgba(15,23,42,.96); border:1px solid #64748b; box-shadow:0 8px 24px #0007; }
+        .phone-call-mini.visible { display:flex; }
+        .phone-call-mini .mini-title { flex:1; min-width:0; font-size:.72rem; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .phone-call-mini button { border:0; border-radius:10px; padding:8px 9px; color:#fff; background:#475569; cursor:pointer; }
+        .phone-call-mini button.mini-hangup { background:#dc2626; }
+        .phone-share-panel { display:none; width:100%; max-height:230px; overflow:auto; margin:12px 0 0; }
+        .phone-share-panel.visible { display:block; }
+        .phone-share-grid { display:grid; grid-template-columns:1fr; gap:8px; width:100%; }
+        .phone-share-tile { min-width:0; padding:6px; border:1px solid #ffffff25; border-radius:12px; background:#020617aa; }
+        .phone-share-tile video { display:block; width:100%; max-height:165px; object-fit:contain; background:#020617; border-radius:8px; }
+        .phone-share-tile span { display:block; padding:5px 2px 1px; color:#e2e8f0; font-size:.68rem; overflow-wrap:anywhere; }
+        .phone-share-button { border:0; border-radius:999px; padding:10px 12px; background:#2563eb; color:#fff; font-size:.75rem; cursor:pointer; }
+        .phone-share-button.is-sharing { background:#d97706; }
+        .phone-call-overlay .call-overlay-actions { gap:18px; flex-wrap:wrap; justify-content:center; }
 
 
         .call-group-options { display:flex; flex-direction:column; gap:7px; margin:10px 0 13px; max-height:170px; overflow:auto; }
@@ -1329,10 +1344,14 @@
 
                 <!-- Écran d’appel entrant / appel en cours -->
                 <div id="phone-call-overlay" class="phone-call-overlay" role="dialog" aria-live="polite" aria-label="Appel téléphonique">
+                    <button type="button" class="phone-call-minimize" onclick="phoneMinimizeCall()" aria-label="Réduire l’appel"><i class="fa-solid fa-window-minimize"></i> Réduire</button>
                     <div class="phone-call-avatar"><i class="fa-solid fa-user"></i></div>
                     <h3 id="phone-overlay-name">Appel entrant</h3>
                     <p id="phone-overlay-number">Numéro inconnu</p>
                     <p id="phone-overlay-state" style="margin-top:12px;">Appel entrant…</p>
+                    <div id="phone-screen-share-panel" class="phone-share-panel">
+                        <div id="phone-screen-share-videos" class="phone-share-grid"></div>
+                    </div>
                     <div class="call-overlay-actions" id="phone-incoming-actions">
                         <button class="round-call-btn call-decline" onclick="phoneRejectCall()" aria-label="Refuser l’appel"><i class="fa-solid fa-phone-slash"></i></button>
                         <button class="round-call-btn call-accept" onclick="phoneAnswerCall()" aria-label="Répondre à l’appel"><i class="fa-solid fa-phone"></i></button>
@@ -1343,10 +1362,21 @@
                             <span id="phone-mute-label" class="call-control-label">Muet : non</span>
                         </div>
                         <div class="call-control-wrap">
+                            <button id="phone-share-button" class="round-call-btn" style="background:#2563eb" onclick="phoneToggleScreenShare()" aria-label="Partager l’écran" title="Partager l’écran"><i class="fa-solid fa-display"></i></button>
+                            <span id="phone-share-label" class="call-control-label">Partager écran</span>
+                        </div>
+                        <div class="call-control-wrap">
                             <button class="round-call-btn call-decline" onclick="phoneHangup()" aria-label="Raccrocher" title="Raccrocher"><i class="fa-solid fa-phone-slash"></i></button>
                             <span class="call-control-label">Raccrocher</span>
                         </div>
                     </div>
+                </div>
+                <div id="phone-call-mini" class="phone-call-mini" aria-live="polite">
+                    <span style="color:#4ade80"><i class="fa-solid fa-phone"></i></span>
+                    <span id="phone-call-mini-title" class="mini-title">Appel en cours</span>
+                    <button type="button" onclick="phoneRestoreCall()" title="Revenir à l’appel" aria-label="Revenir à l’appel"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
+                    <button id="phone-mini-mute" type="button" onclick="phoneToggleMute()" title="Couper/réactiver le micro" aria-label="Couper ou réactiver le micro"><i class="fa-solid fa-microphone"></i></button>
+                    <button type="button" class="mini-hangup" onclick="phoneHangup()" title="Raccrocher" aria-label="Raccrocher"><i class="fa-solid fa-phone-slash"></i></button>
                 </div>
                 <audio id="phone-remote-audio" autoplay playsinline></audio>
 
@@ -1628,6 +1658,8 @@
         const PHONE_ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }];
         let phoneSocket = null;
         let phoneLocalStream = null;
+        let phoneScreenStream = null;
+        let phoneIsScreenSharing = false;
         let phoneIsMuted = false;
         let phonePeerConnection = null;
         let phoneRemoteNumber = '';
@@ -1842,15 +1874,24 @@
 
         function phoneMakePeerConnection() {
             phonePeerConnection = new RTCPeerConnection({ iceServers: PHONE_ICE_SERVERS });
+            // Pré-négocier une piste vidéo pour permettre le partage d’écran sans renégociation.
+            phonePeerConnection.addTransceiver('video', { direction: 'sendrecv' });
             phonePeerConnection.onicecandidate = event => {
                 if (!event.candidate || !phoneRemoteNumber) return;
                 if (phoneSignalCallReady) phoneSend({ type: 'call-candidate', target: phoneRemoteNumber, candidate: event.candidate });
                 else phoneOutboundCandidates.push(event.candidate);
             };
             phonePeerConnection.ontrack = event => {
+                const stream = event.streams && event.streams[0]
+                    ? event.streams[0]
+                    : new MediaStream([event.track]);
+                if (event.track.kind === 'video') {
+                    phoneShowRemoteScreen(stream, phoneRemoteNumber, phoneFindContactName(phoneRemoteNumber) || phoneRemoteNumber);
+                    return;
+                }
                 const audio = document.getElementById('phone-remote-audio');
-                if (audio && event.streams && event.streams[0]) {
-                    audio.srcObject = event.streams[0];
+                if (audio) {
+                    audio.srcObject = stream;
                     audio.play().catch(() => showNotification('Clique sur la page pour activer le son.'));
                 }
             };
@@ -1861,6 +1902,8 @@
                     phoneSetStatus('Appel connecté');
                     const overlayState = document.getElementById('phone-overlay-state');
                     if (overlayState) overlayState.textContent = 'Appel connecté';
+                    const shareButton = document.getElementById('phone-share-button');
+                    if (shareButton) shareButton.disabled = false;
                 } else if (state === 'failed') phoneSetStatus('Connexion impossible. Le réseau peut nécessiter un serveur TURN.');
                 else if (state === 'disconnected') phoneSetStatus('Connexion instable…');
             };
@@ -1974,16 +2017,26 @@
             if (existing) return existing;
             if (!phoneLocalStream || !phoneGroupId) return null;
             const pc = new RTCPeerConnection({ iceServers: PHONE_ICE_SERVERS });
-            const peer = { number, name: name || phoneFindContactName(number) || number, pc, pendingCandidates: [], outboundCandidates: [], signalReady: false, offerStarted: false };
+            const videoTransceiver = pc.addTransceiver('video', { direction: 'sendrecv' });
+            const peer = { number, name: name || phoneFindContactName(number) || number, pc, videoSender: videoTransceiver.sender, pendingCandidates: [], outboundCandidates: [], signalReady: false, offerStarted: false };
             phoneGroupPeers.set(number, peer);
             phoneLocalStream.getTracks().forEach(track => pc.addTrack(track, phoneLocalStream));
+            if (phoneScreenStream && phoneScreenStream.getVideoTracks()[0]) {
+                videoTransceiver.sender.replaceTrack(phoneScreenStream.getVideoTracks()[0]).catch(console.warn);
+            }
             pc.onicecandidate = event => {
                 if (!event.candidate) return;
                 if (peer.signalReady) phoneSend({ type: 'call-candidate', target: number, groupId: phoneGroupId, candidate: event.candidate });
                 else peer.outboundCandidates.push(event.candidate);
             };
             pc.ontrack = event => {
-                if (!event.streams || !event.streams[0]) return;
+                const stream = event.streams && event.streams[0]
+                    ? event.streams[0]
+                    : new MediaStream([event.track]);
+                if (event.track.kind === 'video') {
+                    phoneShowRemoteScreen(stream, number, peer.name);
+                    return;
+                }
                 const audioId = 'phone-group-audio-' + number.replace(/\D/g, '');
                 let audio = document.getElementById(audioId);
                 if (!audio) {
@@ -1994,7 +2047,7 @@
                     audio.style.display = 'none';
                     document.body.appendChild(audio);
                 }
-                audio.srcObject = event.streams[0];
+                audio.srcObject = stream;
                 audio.play().catch(() => showNotification('Clique sur la page pour activer le son du groupe.'));
             };
             pc.onconnectionstatechange = () => phoneUpdateGroupStatus();
@@ -2067,6 +2120,8 @@
             if (overlayName) overlayName.textContent = phoneGroupName || 'Appel de groupe';
             const overlayNumber = document.getElementById('phone-overlay-number');
             if (overlayNumber) overlayNumber.textContent = `${total} participant(s)`;
+            const shareButton = document.getElementById('phone-share-button');
+            if (shareButton) shareButton.disabled = false;
         }
 
         async function phoneStartGroupCall(index) {
@@ -2103,6 +2158,157 @@
             }
         }
 
+        function phoneMinimizeCall() {
+            if (phoneCallState === 'idle' || phoneCallState === 'incoming' || phoneCallState === 'incoming-group') {
+                showNotification('Réponds à l’appel avant de le réduire.');
+                return;
+            }
+            const overlay = document.getElementById('phone-call-overlay');
+            const mini = document.getElementById('phone-call-mini');
+            if (overlay) overlay.classList.remove('visible');
+            if (mini) mini.classList.add('visible');
+            const title = document.getElementById('phone-call-mini-title');
+            if (title) title.textContent = phoneCallMode === 'group'
+                ? (phoneGroupName || 'Appel de groupe')
+                : (phoneFindContactName(phoneRemoteNumber) || phoneRemoteNumber || 'Appel en cours');
+            phoneUpdateMuteButton();
+        }
+
+        function phoneRestoreCall() {
+            const mini = document.getElementById('phone-call-mini');
+            if (mini) mini.classList.remove('visible');
+            const overlay = document.getElementById('phone-call-overlay');
+            if (overlay && phoneCallState !== 'idle') overlay.classList.add('visible');
+        }
+
+        function phoneShowRemoteScreen(stream, number, name) {
+            const panel = document.getElementById('phone-screen-share-panel');
+            const grid = document.getElementById('phone-screen-share-videos');
+            if (!panel || !grid) return;
+            const key = String(number || 'remote').replace(/\D/g, '') || 'remote';
+            const tileId = 'phone-share-tile-' + key;
+            let tile = document.getElementById(tileId);
+            if (!tile) {
+                tile = document.createElement('div');
+                tile.className = 'phone-share-tile';
+                tile.id = tileId;
+                const video = document.createElement('video');
+                video.autoplay = true;
+                video.playsInline = true;
+                video.muted = true;
+                video.setAttribute('aria-label', 'Partage d’écran de ' + (name || number));
+                const label = document.createElement('span');
+                label.textContent = (name || number || 'Participant') + ' — partage d’écran';
+                tile.append(video, label);
+                grid.appendChild(tile);
+                const track = stream.getVideoTracks()[0];
+                if (track) track.addEventListener('ended', () => {
+                    tile.remove();
+                    if (!grid.children.length) panel.classList.remove('visible');
+                }, { once: true });
+            }
+            const video = tile.querySelector('video');
+            if (video && video.srcObject !== stream) video.srcObject = stream;
+            panel.classList.add('visible');
+            if (video) video.play().catch(() => showNotification('Clique sur l’écran pour afficher le partage.'));
+        }
+
+        function phoneShowLocalScreen(stream) {
+            phoneShowRemoteScreen(stream, getOrGeneratePhoneNumber(), (userName || 'Moi') + ' (toi)');
+            const key = String(getOrGeneratePhoneNumber()).replace(/\D/g, '') || 'local';
+            const tile = document.getElementById('phone-share-tile-' + key);
+            const video = tile && tile.querySelector('video');
+            if (video) video.muted = true;
+        }
+
+        async function phoneToggleScreenShare() {
+            if (phoneCallState !== 'active' || !phoneLocalStream) {
+                showNotification('Le partage d’écran est disponible pendant un appel connecté.');
+                return;
+            }
+            if (phoneIsScreenSharing) {
+                await phoneStopScreenShare();
+                return;
+            }
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                showNotification('Le partage d’écran n’est pas pris en charge par ce navigateur. Essaie Chrome ou Edge sur ordinateur.');
+                return;
+            }
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { frameRate: { ideal: 15, max: 30 } },
+                    audio: false
+                });
+                const track = stream.getVideoTracks()[0];
+                if (!track) throw new Error('Aucune piste vidéo disponible.');
+                phoneScreenStream = stream;
+                phoneIsScreenSharing = true;
+                track.addEventListener('ended', () => phoneStopScreenShare(), { once: true });
+
+                if (phoneCallMode === 'group') {
+                    const jobs = [];
+                    for (const peer of phoneGroupPeers.values()) {
+                        const transceiver = peer.pc.getTransceivers().find(item => item.receiver && item.receiver.track && item.receiver.track.kind === 'video');
+                        if (transceiver) jobs.push(transceiver.sender.replaceTrack(track));
+                    }
+                    await Promise.all(jobs);
+                } else if (phonePeerConnection) {
+                    const transceiver = phonePeerConnection.getTransceivers().find(item => item.receiver && item.receiver.track && item.receiver.track.kind === 'video');
+                    if (!transceiver) throw new Error('La connexion vidéo n’est pas prête. Rappelle ton contact.');
+                    await transceiver.sender.replaceTrack(track);
+                }
+
+                phoneShowLocalScreen(stream);
+                phoneUpdateScreenShareButton();
+                showNotification('Partage d’écran activé.');
+            } catch (error) {
+                console.error('Partage d’écran :', error);
+                if (phoneScreenStream) await phoneStopScreenShare();
+                if (error.name !== 'AbortError' && error.name !== 'NotAllowedError') {
+                    showNotification('Impossible de partager l’écran : ' + error.message);
+                } else if (error.name === 'NotAllowedError') {
+                    showNotification('Autorise le partage d’écran dans ton navigateur.');
+                }
+            }
+        }
+
+        async function phoneStopScreenShare() {
+            const stream = phoneScreenStream;
+            phoneScreenStream = null;
+            phoneIsScreenSharing = false;
+            if (stream) stream.getTracks().forEach(track => { track.onended = null; track.stop(); });
+
+            const peers = [];
+            if (phonePeerConnection) peers.push(phonePeerConnection);
+            for (const peer of phoneGroupPeers.values()) peers.push(peer.pc);
+            await Promise.all(peers.map(async pc => {
+                const transceiver = pc.getTransceivers().find(item => item.receiver && item.receiver.track && item.receiver.track.kind === 'video');
+                if (transceiver) {
+                    try { await transceiver.sender.replaceTrack(null); } catch (error) { console.warn('Impossible d’arrêter la piste vidéo', error); }
+                }
+            }));
+
+            const key = String(getOrGeneratePhoneNumber()).replace(/\D/g, '') || 'local';
+            const localTile = document.getElementById('phone-share-tile-' + key);
+            if (localTile) localTile.remove();
+            const panel = document.getElementById('phone-screen-share-panel');
+            const grid = document.getElementById('phone-screen-share-videos');
+            if (panel && grid && !grid.children.length) panel.classList.remove('visible');
+            phoneUpdateScreenShareButton();
+        }
+
+        function phoneUpdateScreenShareButton() {
+            const button = document.getElementById('phone-share-button');
+            const label = document.getElementById('phone-share-label');
+            if (button) {
+                button.classList.toggle('is-sharing', phoneIsScreenSharing);
+                button.innerHTML = phoneIsScreenSharing ? '<i class="fa-solid fa-stop"></i>' : '<i class="fa-solid fa-display"></i>';
+                button.setAttribute('aria-label', phoneIsScreenSharing ? 'Arrêter le partage d’écran' : 'Partager l’écran');
+                button.title = phoneIsScreenSharing ? 'Arrêter le partage d’écran' : 'Partager l’écran';
+            }
+            if (label) label.textContent = phoneIsScreenSharing ? 'Arrêter partage' : 'Partager écran';
+        }
+
         function phoneToggleMute() {
             if (!phoneLocalStream) { showNotification('Le microphone n’est pas encore prêt.'); return; }
             const audioTracks = phoneLocalStream.getAudioTracks();
@@ -2124,6 +2330,8 @@
             button.setAttribute('aria-label', phoneIsMuted ? 'Réactiver le microphone' : 'Couper le microphone');
             button.title = phoneIsMuted ? 'Réactiver le microphone' : 'Couper le microphone';
             label.textContent = phoneIsMuted ? 'Muet : oui' : 'Muet : non';
+            const miniMute = document.getElementById('phone-mini-mute');
+            if (miniMute) { miniMute.innerHTML = phoneIsMuted ? '<i class="fa-solid fa-microphone-slash"></i>' : '<i class="fa-solid fa-microphone"></i>'; miniMute.style.background = phoneIsMuted ? '#d97706' : '#475569'; }
         }
 
         function phoneRejectCall() {
@@ -2131,220 +2339,4 @@
                 phoneSend({ type: 'group-invite-reject', target: phonePendingGroupInvite.from, groupId: phonePendingGroupInvite.groupId, reason: 'rejected' });
                 phonePendingGroupInvite = null;
                 phoneResetCall(false);
-                phoneSetStatus('Invitation refusée');
-                return;
-            }
-            if (phoneCallState === 'incoming' && phoneRemoteNumber) {
-                phoneSend({ type: 'call-reject', target: phoneRemoteNumber, reason: 'rejected' });
-                phoneAddHistory(phoneRemoteNumber, phoneIncomingName || phoneRemoteNumber, 'entrant', 'refusé');
-            }
-            phoneResetCall(false);
-            phoneSetStatus('Appel refusé');
-        }
-
-        function phoneHangup() {
-            if (phoneCallMode === 'group' && phoneGroupId) {
-                phoneSend({ type: 'group-leave', groupId: phoneGroupId });
-                const firstMember = [...phoneGroupMembers.keys()].find(number => number !== getOrGeneratePhoneNumber());
-                if (firstMember) phoneAddHistory(firstMember, phoneGroupName || 'Appel de groupe', 'sortant', 'groupe terminé');
-                phoneResetCall(false);
-                phoneSetStatus('Appel de groupe terminé');
-                return;
-            }
-            if (phoneRemoteNumber && phoneCallState !== 'idle') phoneSend({ type: 'call-end', target: phoneRemoteNumber });
-            if (phoneRemoteNumber && (phoneCallState === 'active' || phoneCallState === 'outgoing')) {
-                phoneAddHistory(phoneRemoteNumber, phoneFindContactName(phoneRemoteNumber) || phoneRemoteNumber, phoneCallState === 'outgoing' ? 'sortant' : 'entrant', 'terminé');
-            }
-            phoneResetCall(false);
-            phoneSetStatus('Appel terminé');
-        }
-
-        function phoneResetCall(sendEnd = false) {
-            if (sendEnd && phoneRemoteNumber && phoneCallMode === 'single') phoneSend({ type: 'call-end', target: phoneRemoteNumber });
-            if (phonePeerConnection) {
-                phonePeerConnection.ontrack = null;
-                phonePeerConnection.onicecandidate = null;
-                phonePeerConnection.close();
-                phonePeerConnection = null;
-            }
-            phoneGroupPeers.forEach((peer, number) => phoneCloseGroupPeer(number));
-            phoneGroupMembers.clear();
-            if (phoneLocalStream) {
-                phoneLocalStream.getTracks().forEach(track => track.stop());
-                phoneLocalStream = null;
-            }
-            const audio = document.getElementById('phone-remote-audio');
-            if (audio) { audio.pause(); audio.srcObject = null; }
-            document.querySelectorAll('[id^="phone-group-audio-"]').forEach(el => { el.pause(); el.srcObject = null; el.remove(); });
-            phoneIsMuted = false;
-            phoneUpdateMuteButton();
-            phoneRemoteNumber = '';
-            phonePendingOffer = null;
-            phonePendingCandidates = [];
-            phoneSignalCallReady = false;
-            phoneOutboundCandidates = [];
-            phoneIncomingName = '';
-            phonePendingGroupInvite = null;
-            phoneCallState = 'idle';
-            phoneCallMode = 'single';
-            phoneGroupId = '';
-            phoneGroupName = '';
-            document.getElementById('phone-call-overlay').classList.remove('visible');
-            document.getElementById('phone-incoming-actions').style.display = 'flex';
-            document.getElementById('phone-active-actions').style.display = 'none';
-            document.getElementById('phone-hangup-button').disabled = true;
-            document.getElementById('phone-call-button').disabled = false;
-        }
-
-        function phoneShowCallOverlay(name, number, state, incoming) {
-            const overlay = document.getElementById('phone-call-overlay');
-            document.getElementById('phone-overlay-name').textContent = name || number || 'Appel';
-            document.getElementById('phone-overlay-number').textContent = number || '';
-            document.getElementById('phone-overlay-state').textContent = state || '';
-            document.getElementById('phone-incoming-actions').style.display = incoming ? 'flex' : 'none';
-            document.getElementById('phone-active-actions').style.display = incoming ? 'none' : 'flex';
-            document.getElementById('phone-hangup-button').disabled = false;
-            document.getElementById('phone-call-button').disabled = true;
-            phoneUpdateMuteButton();
-            overlay.classList.add('visible');
-        }
-
-        function phoneDialDigit(digit) { const input = document.getElementById('phone-dial-number'); input.value += digit; input.focus(); }
-        function phoneDeleteDigit() { const input = document.getElementById('phone-dial-number'); input.value = input.value.slice(0, -1); input.focus(); }
-        function phoneClearDial() { document.getElementById('phone-dial-number').value = ''; }
-
-        function phoneShowTab(tab) {
-            ['contacts', 'history', 'add', 'groups'].forEach(name => {
-                const panel = document.getElementById('phone-panel-' + name);
-                const button = document.getElementById('phone-tab-' + name);
-                if (panel) panel.style.display = name === tab ? 'block' : 'none';
-                if (button) button.classList.toggle('active', name === tab);
-            });
-            if (tab === 'contacts') phoneRenderContacts();
-            if (tab === 'history') phoneRenderHistory();
-            if (tab === 'groups') phoneRenderGroups();
-            if (tab === 'add') phoneRenderGroupContactOptions();
-        }
-
-        function phoneAddContact() {
-            const name = document.getElementById('phone-contact-name').value.trim();
-            const number = phoneNormalizeNumber(document.getElementById('phone-contact-number').value);
-            if (!name || !number) { showNotification('Entre le nom et le numéro du contact.'); return; }
-            if (!phoneValidNumber(number)) { showNotification('Le numéro doit être au format 555-123-4567.'); return; }
-            if (number === getOrGeneratePhoneNumber()) { showNotification('C’est ton propre numéro.'); return; }
-            phoneContacts = phoneContacts.filter(contact => phoneNormalizeNumber(contact.number) !== number);
-            phoneContacts.unshift({ name, number });
-            localStorage.setItem('phone_contacts', JSON.stringify(phoneContacts));
-            document.getElementById('phone-contact-name').value = '';
-            document.getElementById('phone-contact-number').value = '';
-            phoneRenderContacts();
-            phoneRenderGroupContactOptions();
-            phoneShowTab('contacts');
-            showNotification('Contact enregistré.');
-        }
-
-        function phoneFindContactName(number) {
-            const contact = phoneContacts.find(item => phoneNormalizeNumber(item.number) === phoneNormalizeNumber(number));
-            return contact ? contact.name : '';
-        }
-
-        function phoneStartCallFromButton(button) {
-            const number = button && button.dataset ? button.dataset.number : '';
-            if (number) phoneStartCall(number);
-        }
-
-        function phoneRenderContacts() {
-            const list = document.getElementById('phone-contacts-list');
-            if (!list) return;
-            if (!phoneContacts.length) {
-                list.innerHTML = '<p class="call-muted" style="text-align:center;padding:14px 0;">Aucun contact. Ajoute un joueur avec son numéro RP.</p>';
-                return;
-            }
-            list.innerHTML = phoneContacts.map((contact, index) => `<div class="call-contact"><div class="call-avatar"><i class="fa-solid fa-user"></i></div><div class="call-contact-info"><strong>${phoneEscapeHtml(contact.name)}</strong><span>${phoneEscapeHtml(contact.number)}</span></div><button type="button" class="call-small-btn" data-action="call" data-number="${phoneEscapeHtml(contact.number)}" onclick="phoneStartCallFromButton(this)" aria-label="Appeler ${phoneEscapeHtml(contact.name)}"><i class="fa-solid fa-phone"></i></button><button type="button" class="call-small-btn" style="background:#475569;" onclick="phoneRemoveContact(${index})" aria-label="Supprimer le contact"><i class="fa-solid fa-xmark"></i></button></div>`).join('');
-        }
-
-        function phoneRemoveContact(index) {
-            phoneContacts.splice(index, 1);
-            localStorage.setItem('phone_contacts', JSON.stringify(phoneContacts));
-            phoneGroups = phoneGroups.map(group => ({ ...group, members: (group.members || []).filter(number => phoneContacts.some(contact => phoneNormalizeNumber(contact.number) === phoneNormalizeNumber(number))) }));
-            localStorage.setItem('phone_groups', JSON.stringify(phoneGroups));
-            phoneRenderContacts();
-            phoneRenderGroupContactOptions();
-            phoneRenderGroups();
-        }
-
-        function phoneAddHistory(number, name, direction, result) {
-            if (!number) return;
-            phoneHistory.unshift({ number, name: name || number, direction, result, time: new Date().toLocaleString('fr-CA') });
-            phoneHistory = phoneHistory.slice(0, 30);
-            localStorage.setItem('phone_callHistory', JSON.stringify(phoneHistory));
-            phoneRenderHistory();
-        }
-
-        function phoneRenderHistory() {
-            const list = document.getElementById('phone-history-list');
-            if (!list) return;
-            if (!phoneHistory.length) {
-                list.innerHTML = '<p class="call-muted" style="text-align:center;padding:14px 0;">Aucun appel récent.</p>';
-                return;
-            }
-            list.innerHTML = phoneHistory.map(item => `<div class="call-contact"><div class="call-avatar" style="background:${item.result === 'refusé' || item.result === 'échec' ? '#dc2626' : '#475569'}"><i class="fa-solid fa-${item.direction === 'entrant' ? 'phone-volume' : 'phone'}"></i></div><div class="call-contact-info"><strong>${phoneEscapeHtml(item.name || item.number)}</strong><span>${phoneEscapeHtml(item.number)} · ${phoneEscapeHtml(item.result)}<br>${phoneEscapeHtml(item.time || '')}</span></div><button type="button" class="call-small-btn" data-number="${phoneEscapeHtml(item.number)}" onclick="phoneStartCallFromButton(this)" aria-label="Rappeler"><i class="fa-solid fa-phone"></i></button></div>`).join('');
-        }
-
-        function phoneRenderGroupContactOptions() {
-            const box = document.getElementById('phone-group-contact-options');
-            if (!box) return;
-            if (!phoneContacts.length) {
-                box.innerHTML = '<p class="call-muted">Ajoute d’abord des contacts pour créer un groupe.</p>';
-                return;
-            }
-            box.innerHTML = phoneContacts.map((contact, index) => `<label class="call-group-option"><input type="checkbox" class="phone-group-member-check" value="${phoneEscapeHtml(contact.number)}"><span><strong>${phoneEscapeHtml(contact.name)}</strong><small>${phoneEscapeHtml(contact.number)}</small></span></label>`).join('');
-        }
-
-        function phoneAddGroup() {
-            const nameInput = document.getElementById('phone-group-name');
-            const name = nameInput.value.trim();
-            const selected = [...document.querySelectorAll('.phone-group-member-check:checked')].map(input => phoneNormalizeNumber(input.value));
-            if (!name) { showNotification('Donne un nom au groupe.'); return; }
-            if (!selected.length) { showNotification('Sélectionne au moins un contact.'); return; }
-            phoneGroups.push({ id: 'saved-' + Date.now().toString(36), name: name.slice(0, 40), members: [...new Set(selected)] });
-            localStorage.setItem('phone_groups', JSON.stringify(phoneGroups));
-            nameInput.value = '';
-            phoneRenderGroupContactOptions();
-            phoneRenderGroups();
-            phoneShowTab('groups');
-            showNotification('Groupe créé.');
-        }
-
-        function phoneDeleteGroup(index) {
-            phoneGroups.splice(index, 1);
-            localStorage.setItem('phone_groups', JSON.stringify(phoneGroups));
-            phoneRenderGroups();
-        }
-
-        function phoneRenderGroups() {
-            const list = document.getElementById('phone-groups-list');
-            if (!list) return;
-            if (!phoneGroups.length) {
-                list.innerHTML = '<p class="call-muted" style="text-align:center;padding:14px 0;">Aucun groupe. Va dans « Ajouter » pour en créer un.</p>';
-                return;
-            }
-            list.innerHTML = phoneGroups.map((group, index) => {
-                const names = (group.members || []).map(number => phoneFindContactName(number) || number);
-                return `<div class="call-contact"><div class="call-avatar" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9)"><i class="fa-solid fa-users"></i></div><div class="call-contact-info"><strong>${phoneEscapeHtml(group.name)}</strong><span>${names.length} contact(s) : ${phoneEscapeHtml(names.join(', '))}</span></div><button type="button" class="call-small-btn" onclick="phoneStartGroupCall(${index})" aria-label="Appeler le groupe ${phoneEscapeHtml(group.name)}"><i class="fa-solid fa-phone"></i></button><button type="button" class="call-small-btn" style="background:#475569" onclick="phoneDeleteGroup(${index})" aria-label="Supprimer le groupe"><i class="fa-solid fa-xmark"></i></button></div>`;
-            }).join('');
-        }
-
-        function phoneEscapeHtml(value) {
-            return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-        }
-
-        phoneConnectSignaling();
-        phoneRenderContacts();
-        phoneRenderHistory();
-        phoneRenderGroups();
-        phoneRenderGroupContactOptions();
-
-    </script>
-</body>
-</html>
+  

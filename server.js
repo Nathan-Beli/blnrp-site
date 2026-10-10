@@ -461,6 +461,15 @@ function removeFromGroup(socket, groupId, notify = true) {
 }
 
 // Vérification du serveur.
+// Route de diagnostic : confirme que le bon server.js est exécuté.
+app.get('/debug-route', (req, res) => {
+    res.json({
+        ok: true,
+        message: 'Le server.js modifié est bien exécuté',
+        version: 'discord-oauth-debug-1'
+    });
+});
+
 app.get('/health', (req, res) => {
     res.json({
         ok: true,

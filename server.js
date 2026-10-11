@@ -1,3 +1,4 @@
+
 /**
  * Blainville RP QC
  * Serveur Express, connexion Discord OAuth2, données du téléphone
@@ -6,17 +7,11 @@
  * Node.js 18+
  * Démarrage : npm start
  *
- * Variables requises pour la connexion Discord :
+ * Variables requises :
  * DISCORD_CLIENT_ID
  * DISCORD_CLIENT_SECRET
  * DISCORD_REDIRECT_URI
  * SESSION_SECRET
- *
- * Variables facultatives :
- * DISCORD_TOKEN
- * GUILD_ID
- * DATA_DIR
- * PORT
  */
 
 'use strict';
@@ -34,7 +29,6 @@ const WebSocket = require('ws');
 const { Client, GatewayIntentBits } = require('discord.js');
 
 const app = express();
-const isProduction = process.env.NODE_ENV === 'production';
 
 const dataDir = process.env.DATA_DIR || path.join(__dirname, 'data');
 const accountDataFile = path.join(dataDir, 'discord-phone-data.json');
@@ -54,12 +48,14 @@ app.use(session({
         'CHANGE-ME-TO-A-LONG-RANDOM-SECRET-BEFORE-DEPLOYING',
     resave: false,
     saveUninitialized: false,
- cookie: {
-    httpOnly: true,
-    secure: 'auto',
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000
-}
+    proxy: true,
+    cookie: {
+        httpOnly: true,
+        secure: 'auto',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    }
 }));
 
 app.use(express.static(__dirname));
@@ -68,10 +64,6 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'roleplay.html'));
 });
 
-// ======================================================
-// CONNEXION DISCORD OAUTH2
-// ======================================================
-
 const DISCORD_API = 'https://discord.com/api/v10';
 
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
@@ -79,7 +71,7 @@ const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const DISCORD_REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
 
 // ======================================================
-// SAUVEGARDE DES DONNÉES PAR COMPTE DISCORD
+// DONNÉES PAR COMPTE DISCORD
 // ======================================================
 
 function getAccountData() {
@@ -201,7 +193,6 @@ app.get('/auth/discord/callback', async (req, res) => {
     delete req.session.discordOAuthState;
 
     try {
-        // Échanger le code OAuth contre un jeton d'accès.
         const tokenResponse = await fetch(
             `${DISCORD_API}/oauth2/token`,
             {
@@ -233,7 +224,6 @@ app.get('/auth/discord/callback', async (req, res) => {
             );
         }
 
-        // Récupérer le compte Discord connecté.
         const userResponse = await fetch(
             `${DISCORD_API}/users/@me`,
             {
@@ -251,7 +241,6 @@ app.get('/auth/discord/callback', async (req, res) => {
             );
         }
 
-        // Ne conserver que les informations publiques nécessaires.
         req.session.discordUser = {
             id: String(user.id),
             username: String(
@@ -292,12 +281,15 @@ app.get('/auth/logout', (req, res) => {
             console.error('Erreur de déconnexion :', error);
         }
 
-        res.clearCookie('blainville.sid');
+        res.clearCookie('blainville.sid', {
+            path: '/'
+        });
+
         res.redirect('/');
     });
 });
 
-// Informations sur le compte actuellement connecté.
+// Vérifier le compte connecté.
 app.get('/api/me', (req, res) => {
     if (!req.session.discordUser) {
         return res.status(401).json({
@@ -311,7 +303,7 @@ app.get('/api/me', (req, res) => {
     });
 });
 
-// Lire les données du téléphone du compte connecté.
+// Lire les données du téléphone.
 app.get('/api/phone-data', requireDiscordLogin, (req, res) => {
     const allData = getAccountData();
 
@@ -323,7 +315,7 @@ app.get('/api/phone-data', requireDiscordLogin, (req, res) => {
     });
 });
 
-// Sauvegarder les données du téléphone du compte connecté.
+// Sauvegarder les données du téléphone.
 app.put('/api/phone-data', requireDiscordLogin, (req, res) => {
     if (
         !req.body ||
@@ -369,9 +361,9 @@ app.put('/api/phone-data', requireDiscordLogin, (req, res) => {
     }
 });
 
-// ======================================================
-// SERVEUR HTTP ET WEBSOCKET
-// ======================================================
+ // ======================================================
+ // SERVEUR HTTP ET WEBSOCKET
+ // ======================================================
 
 const server = http.createServer(app);
 
@@ -460,8 +452,7 @@ function removeFromGroup(socket, groupId, notify = true) {
     }
 }
 
-// Vérification du serveur.
-// Route de diagnostic : confirme que le bon server.js est exécuté.
+// Routes de diagnostic.
 app.get('/debug-route', (req, res) => {
     res.json({
         ok: true,
@@ -745,7 +736,7 @@ wss.on('connection', socket => {
             return;
         }
 
-        // Signalisation WebRTC pour les appels.
+        // Signalisation WebRTC des appels individuels/de groupe.
         const allowedTypes = new Set([
             'call-offer',
             'call-answer',
@@ -871,9 +862,9 @@ wss.on('connection', socket => {
     });
 });
 
-// ======================================================
-// DÉMARRAGE
-// ======================================================
+ // ======================================================
+ // DÉMARRAGE
+ // ======================================================
 
 discord.once('ready', () => {
     console.log(`Bot Discord connecté : ${discord.user.tag}`);

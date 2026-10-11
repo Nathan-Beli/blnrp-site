@@ -263,7 +263,7 @@ app.get('/auth/discord/callback', async (req, res) => {
                 );
             }
 
-            return res.redirect('/');
+            return res.redirect('/api/me');
         });
     } catch (err) {
         console.error('Erreur callback Discord :', err);

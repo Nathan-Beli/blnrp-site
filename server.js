@@ -54,12 +54,12 @@ app.use(session({
         'CHANGE-ME-TO-A-LONG-RANDOM-SECRET-BEFORE-DEPLOYING',
     resave: false,
     saveUninitialized: false,
-    cookie: {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000
-    }
+ cookie: {
+    httpOnly: true,
+    secure: 'auto',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000
+}
 }));
 
 app.use(express.static(__dirname));
